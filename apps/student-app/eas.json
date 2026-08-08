@@ -9,7 +9,7 @@
       "distribution": "internal",
       "android": { "buildType": "apk" },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.5:4000/api"
+        "EXPO_PUBLIC_API_URL": "https://sfgc-api.onrender.com/api"
       }
     },
     "preview": {
@@ -18,7 +18,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sfgc-api.example.com/api"
+        "EXPO_PUBLIC_API_URL": "https://sfgc-api.onrender.com/api"
       }
     },
     "production": {
@@ -27,7 +27,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sfgc-api.example.com/api"
+        "EXPO_PUBLIC_API_URL": "https://sfgc-api.onrender.com/api"
       }
     },
     "production-aab": {
@@ -36,7 +36,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sfgc-api.example.com/api"
+        "EXPO_PUBLIC_API_URL": "https://sfgc-api.onrender.com/api"
       }
     }
   },
