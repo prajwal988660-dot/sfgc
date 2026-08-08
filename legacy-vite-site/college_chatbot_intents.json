@@ -1,0 +1,590 @@
+{
+  "chatbot_name": "College Admission & Student Help Bot",
+  "version": "1.0",
+  "instructions_for_setup": "Replace every {{PLACEHOLDER}} with your college's actual details before going live. Keep 8-15 utterances per intent for good accuracy. Route the 'fallback' and 'talk_to_human' intents to a real contact option for anything the bot can't answer.",
+  "languages_supported": ["English", "Hindi (add regional language if needed)"],
+
+  "audiences": {
+
+    "prospective_students": {
+      "description": "New / prospective admission-seeking students",
+      "intents": [
+
+        {
+          "intent": "admissions_process",
+          "topic": "Admission process",
+          "utterances": [
+            "how do I apply for admission",
+            "what is the admission procedure",
+            "steps to take admission here",
+            "how to apply",
+            "admission process kya hai",
+            "where do I fill the application form",
+            "guide me through admission",
+            "process of getting admission",
+            "how can I join this college",
+            "tell me the admission steps"
+          ],
+          "response": "You can apply online at {{APPLICATION_LINK}}. Steps: 1) Register with your email/phone, 2) Fill the application form, 3) Upload required documents, 4) Pay the application fee of {{APPLICATION_FEE}}, 5) Submit and note your application ID. For help, contact {{ADMISSION_OFFICE_CONTACT}}."
+        },
+
+        {
+          "intent": "deadlines",
+          "topic": "Application deadlines",
+          "utterances": [
+            "last date to apply",
+            "when is the application deadline",
+            "admission last date",
+            "till when can I submit the form",
+            "is the deadline over",
+            "closing date for applications",
+            "how many days left to apply",
+            "when do applications close",
+            "deadline for {{COURSE}} admission",
+            "form submission last date"
+          ],
+          "response": "The last date to apply for {{ACADEMIC_YEAR}} is {{APPLICATION_DEADLINE}}. Late applications may be considered until {{LATE_DEADLINE}} with a late fee. Apply early to avoid last-minute issues."
+        },
+
+        {
+          "intent": "eligibility_criteria",
+          "topic": "Eligibility criteria",
+          "utterances": [
+            "am I eligible for this course",
+            "what is the eligibility for BTech",
+            "minimum marks required for admission",
+            "which entrance exam do you accept",
+            "do you take JEE scores",
+            "do you accept CET or NEET",
+            "eligibility for MBA",
+            "what percentage do I need",
+            "can I apply with diploma",
+            "qualification required for admission"
+          ],
+          "response": "Eligibility for {{COURSE}}: {{ELIGIBILITY_DETAILS}} (e.g., minimum {{MIN_PERCENTAGE}}% in 12th). Accepted entrance exams: {{ACCEPTED_EXAMS}}. For exact criteria per course, see {{ELIGIBILITY_LINK}}."
+        },
+
+        {
+          "intent": "cutoffs_merit_list",
+          "topic": "Cutoffs & merit list",
+          "utterances": [
+            "what was last year's cutoff",
+            "when will the merit list come out",
+            "cutoff for CSE branch",
+            "how to check if my name is in the list",
+            "expected cutoff this year",
+            "merit list date",
+            "cutoff marks for {{COURSE}}",
+            "where to see the merit list",
+            "did I get selected",
+            "how are cutoffs decided"
+          ],
+          "response": "Cutoffs vary each year by course and category. Last year's cutoff for {{COURSE}} was around {{LAST_CUTOFF}}. The merit list for {{ACADEMIC_YEAR}} will be published on {{MERIT_LIST_DATE}} at {{MERIT_LIST_LINK}}. Check with your application ID."
+        },
+
+        {
+          "intent": "courses_offered",
+          "topic": "Courses offered",
+          "utterances": [
+            "what courses are available",
+            "do you have MBA",
+            "list of programs",
+            "which branches are there in engineering",
+            "course duration and syllabus",
+            "do you offer {{COURSE}}",
+            "what can I study here",
+            "available UG and PG courses",
+            "diploma courses offered",
+            "specializations available"
+          ],
+          "response": "We offer: {{LIST_OF_COURSES}}. Each program details (duration, syllabus, specializations) are available at {{COURSES_LINK}}. Which course are you interested in?"
+        },
+
+        {
+          "intent": "fee_structure",
+          "topic": "Fee structure",
+          "utterances": [
+            "how much is the fees",
+            "fees for first year",
+            "total course fee",
+            "fees kitna hai",
+            "can I pay fees in installments",
+            "fee for {{COURSE}}",
+            "what is the tuition fee",
+            "hostel and tuition fees together",
+            "is there any extra charges",
+            "fee payment options"
+          ],
+          "response": "The fee for {{COURSE}} is {{COURSE_FEE}} per {{PERIOD}}. This {{INCLUDES/EXCLUDES}} hostel and other charges. Installment options are {{AVAILABLE/NOT AVAILABLE}}. Full fee details: {{FEE_LINK}}."
+        },
+
+        {
+          "intent": "scholarships",
+          "topic": "Scholarships & financial aid",
+          "utterances": [
+            "what scholarships do you offer",
+            "am I eligible for scholarship",
+            "how to apply for scholarship",
+            "is there any fee concession",
+            "scholarship for SC ST students",
+            "merit based scholarship",
+            "education loan help",
+            "any financial aid available",
+            "government scholarship support",
+            "fee waiver for toppers"
+          ],
+          "response": "We offer {{SCHOLARSHIP_TYPES}} (merit-based, category-based, and government schemes). Eligibility and application details: {{SCHOLARSHIP_LINK}}. We also assist with education loans through {{PARTNER_BANKS}}."
+        },
+
+        {
+          "intent": "placements",
+          "topic": "Placements & internships",
+          "utterances": [
+            "what is the placement record",
+            "average package",
+            "which companies come for placement",
+            "highest salary offered",
+            "do you provide internships",
+            "placement percentage",
+            "top recruiters",
+            "is placement guaranteed",
+            "internship opportunities",
+            "how good are placements"
+          ],
+          "response": "Our placement highlights: {{PLACEMENT_PERCENTAGE}}% placed, average package {{AVERAGE_PACKAGE}}, highest {{HIGHEST_PACKAGE}}. Top recruiters include {{TOP_RECRUITERS}}. We also provide internships in {{INTERNSHIP_AREAS}}. More: {{PLACEMENT_LINK}}."
+        },
+
+        {
+          "intent": "hostel_facilities",
+          "topic": "Hostel & campus facilities",
+          "utterances": [
+            "is hostel available",
+            "hostel fees",
+            "are rooms AC or non-AC",
+            "is there separate hostel for girls",
+            "how is the mess food",
+            "hostel facilities",
+            "wifi in hostel",
+            "sharing rooms available",
+            "hostel timings and rules",
+            "laundry and food facilities"
+          ],
+          "response": "Hostel is available for both boys and girls. Fees: {{HOSTEL_FEE}} per {{PERIOD}}. Rooms: {{ROOM_TYPES}}. Facilities include mess, Wi-Fi, laundry, and 24x7 security. Details: {{HOSTEL_LINK}}."
+        },
+
+        {
+          "intent": "documents_required",
+          "topic": "Documents required",
+          "utterances": [
+            "what documents do I need for admission",
+            "list of certificates required",
+            "do I need original marksheets",
+            "documents for form submission",
+            "which papers to bring",
+            "required documents list",
+            "do I need caste certificate",
+            "photo and signature requirements",
+            "documents for scholarship",
+            "papers needed at time of joining"
+          ],
+          "response": "Documents required: 10th & 12th marksheets, transfer certificate, entrance exam scorecard, passport photos, ID proof (Aadhaar), and category certificate (if applicable). Bring originals + {{NUMBER}} photocopies. Full list: {{DOCUMENTS_LINK}}."
+        },
+
+        {
+          "intent": "campus_location_visit",
+          "topic": "Campus location & visit",
+          "utterances": [
+            "where is the college located",
+            "how to reach the campus",
+            "can I visit the campus",
+            "is there a campus tour",
+            "college address",
+            "open day details",
+            "how far is it from the station",
+            "directions to college",
+            "can parents visit the campus",
+            "campus tour booking"
+          ],
+          "response": "We are located at {{COLLEGE_ADDRESS}}. Nearest {{STATION/AIRPORT}}: {{DISTANCE}}. Campus tours are available on {{TOUR_DAYS}}. Book a visit at {{VISIT_LINK}} or call {{CONTACT_NUMBER}}."
+        }
+      ]
+    },
+
+    "parents": {
+      "description": "Questions typically asked by parents",
+      "intents": [
+
+        {
+          "intent": "accreditation_recognition",
+          "topic": "Accreditation & recognition",
+          "utterances": [
+            "is the college UGC approved",
+            "are you AICTE recognized",
+            "what is your NAAC grade",
+            "college ranking",
+            "is the degree valid",
+            "is this college recognized",
+            "affiliated to which university",
+            "approvals and accreditation",
+            "is the college genuine",
+            "government approved or not"
+          ],
+          "response": "Yes, the college is {{APPROVALS}} (e.g., UGC-recognized, AICTE-approved, NAAC {{GRADE}} accredited) and affiliated to {{UNIVERSITY}}. Our degrees are fully valid. Rankings and accreditation certificates: {{ACCREDITATION_LINK}}."
+        },
+
+        {
+          "intent": "fee_and_refund_policy",
+          "topic": "Fees, refund & payment schedule",
+          "utterances": [
+            "what is the refund policy",
+            "can I get fees back if I cancel",
+            "fee payment schedule",
+            "when is the next fee due",
+            "installment dates",
+            "refund on withdrawal",
+            "how to pay the fees",
+            "online fee payment",
+            "is there a penalty for late payment",
+            "fee receipt and details"
+          ],
+          "response": "Fees can be paid via {{PAYMENT_METHODS}}. Payment schedule: {{PAYMENT_SCHEDULE}}. Refund policy: {{REFUND_POLICY}} (as per {{REGULATORY_NORMS}}). For queries contact the accounts office at {{ACCOUNTS_CONTACT}}."
+        },
+
+        {
+          "intent": "campus_safety_security",
+          "topic": "Campus safety & security",
+          "utterances": [
+            "is the campus safe",
+            "what security is there",
+            "anti ragging measures",
+            "how safe is it for girls",
+            "is there cctv",
+            "safety of students",
+            "ragging complaints",
+            "security guards on campus",
+            "is it safe for outstation students",
+            "hostel security"
+          ],
+          "response": "Student safety is a top priority. The campus has 24x7 security, CCTV surveillance, a strict anti-ragging policy with an active committee, and a grievance helpline {{HELPLINE_NUMBER}}. Hostels have separate secured wings for boys and girls."
+        },
+
+        {
+          "intent": "medical_health_facilities",
+          "topic": "Medical & health facilities",
+          "utterances": [
+            "are there medical facilities",
+            "is there a doctor on campus",
+            "what if my child falls sick",
+            "nearest hospital",
+            "health center on campus",
+            "emergency medical help",
+            "ambulance availability",
+            "first aid facilities",
+            "medical insurance for students",
+            "campus clinic timings"
+          ],
+          "response": "The campus has a health center with {{MEDICAL_FACILITIES}} (on-call doctor, first aid, ambulance). The nearest hospital is {{HOSPITAL_NAME}}, {{DISTANCE}} away. Emergency contact: {{EMERGENCY_CONTACT}}."
+        },
+
+        {
+          "intent": "parent_communication",
+          "topic": "Parent-faculty communication",
+          "utterances": [
+            "how can I contact the faculty",
+            "is there a parent portal",
+            "how do I track my child's attendance",
+            "parent teacher meetings",
+            "how to know about academic progress",
+            "will I get attendance updates",
+            "how to reach the mentor",
+            "progress reports for parents",
+            "can I get exam results",
+            "communication with college"
+          ],
+          "response": "Parents can track attendance, marks, and progress through {{PARENT_PORTAL_LINK}}. Parent-teacher meetings are held {{PTM_FREQUENCY}}. Each student has an assigned mentor reachable via {{MENTOR_CONTACT_METHOD}}."
+        }
+      ]
+    },
+
+    "existing_students": {
+      "description": "Questions from currently enrolled students",
+      "intents": [
+
+        {
+          "intent": "exam_timetable_results",
+          "topic": "Exams, timetable & results",
+          "utterances": [
+            "when is the exam timetable out",
+            "how to check results",
+            "revaluation process",
+            "result kab aayega",
+            "exam schedule",
+            "how to apply for revaluation",
+            "when are semester exams",
+            "where to see marks",
+            "hall ticket download",
+            "supplementary exam dates"
+          ],
+          "response": "Exam timetables and results are published on {{EXAM_PORTAL_LINK}}. Hall tickets can be downloaded {{DAYS_BEFORE}} days before exams. For revaluation, apply within {{REVAL_WINDOW}} days of results at {{REVAL_LINK}}."
+        },
+
+        {
+          "intent": "certificate_requests",
+          "topic": "Certificate requests",
+          "utterances": [
+            "how to get bonafide certificate",
+            "I need my transcript",
+            "apply for migration certificate",
+            "request duplicate marksheet",
+            "how long does a certificate take",
+            "bonafide certificate application",
+            "need a study certificate",
+            "transfer certificate request",
+            "how to get transcript for higher studies",
+            "character certificate"
+          ],
+          "response": "Request certificates (bonafide, transcript, migration, TC, duplicate marksheet) online at {{CERTIFICATE_PORTAL}} or at the {{OFFICE_NAME}}. Processing time: {{PROCESSING_DAYS}} working days. Fees may apply for some certificates."
+        },
+
+        {
+          "intent": "fee_payment_dues",
+          "topic": "Fee payment & dues",
+          "utterances": [
+            "how to pay my fees online",
+            "check my pending dues",
+            "download fee receipt",
+            "fee due date",
+            "how much do I owe",
+            "pay semester fee",
+            "receipt for paid fees",
+            "any outstanding balance",
+            "late fee amount",
+            "fee payment link"
+          ],
+          "response": "Pay your fees and check dues at {{FEE_PORTAL_LINK}}. Receipts are auto-generated after payment. For discrepancies, contact the accounts office at {{ACCOUNTS_CONTACT}}."
+        },
+
+        {
+          "intent": "attendance",
+          "topic": "Attendance",
+          "utterances": [
+            "how to check my attendance",
+            "my attendance is short",
+            "attendance percentage",
+            "what is the minimum attendance required",
+            "attendance shortage penalty",
+            "where to see attendance",
+            "how to improve attendance",
+            "medical leave attendance",
+            "attendance rules",
+            "condonation for attendance"
+          ],
+          "response": "Check your attendance on {{ATTENDANCE_PORTAL}}. Minimum required is {{MIN_ATTENDANCE}}%. Shortage may lead to {{CONSEQUENCE}}. For medical/genuine cases, apply for condonation with proof at {{CONDONATION_LINK}}."
+        },
+
+        {
+          "intent": "library_services",
+          "topic": "Library services",
+          "utterances": [
+            "library timings",
+            "how to search for a book",
+            "renew my library book",
+            "library fine",
+            "how many books can I borrow",
+            "is the library open on weekends",
+            "e-library access",
+            "return date for books",
+            "digital library login",
+            "lost book policy"
+          ],
+          "response": "Library hours: {{LIBRARY_TIMINGS}}. Search and renew books at {{LIBRARY_PORTAL}}. You can borrow up to {{BOOK_LIMIT}} books. Late fine: {{FINE_RATE}}. E-library access: {{ELIBRARY_LINK}}."
+        },
+
+        {
+          "intent": "hostel_mess_issues",
+          "topic": "Hostel & mess issues",
+          "utterances": [
+            "how to raise a hostel complaint",
+            "mess food issue",
+            "room change request",
+            "hostel maintenance problem",
+            "water or electricity issue in hostel",
+            "hostel warden contact",
+            "wifi not working in hostel",
+            "mess timings",
+            "hostel fee payment",
+            "report a hostel problem"
+          ],
+          "response": "Raise hostel or mess complaints at {{HOSTEL_COMPLAINT_LINK}} or contact the warden at {{WARDEN_CONTACT}}. Mess timings: {{MESS_TIMINGS}}. Maintenance requests are typically resolved within {{RESOLUTION_TIME}}."
+        },
+
+        {
+          "intent": "events_clubs_activities",
+          "topic": "Events, clubs & activities",
+          "utterances": [
+            "upcoming events",
+            "how to join a club",
+            "college fest details",
+            "what clubs are there",
+            "cultural activities",
+            "technical events",
+            "sports events",
+            "how to register for a competition",
+            "workshops and seminars",
+            "student club list"
+          ],
+          "response": "Upcoming events and club info are posted at {{EVENTS_LINK}}. We have clubs for {{CLUB_CATEGORIES}} (technical, cultural, sports, etc.). To join or register, sign up at {{CLUB_REGISTRATION_LINK}}."
+        },
+
+        {
+          "intent": "transport_bus",
+          "topic": "Transport & bus routes",
+          "utterances": [
+            "bus routes",
+            "college bus timings",
+            "how to get a bus pass",
+            "transport fees",
+            "is there a bus from my area",
+            "bus stop near me",
+            "transport facility",
+            "bus pass renewal",
+            "shuttle service",
+            "bus route map"
+          ],
+          "response": "College buses cover {{ROUTES_COVERED}}. Timings and route maps: {{TRANSPORT_LINK}}. Bus pass fee: {{BUS_FEE}} per {{PERIOD}}. Apply or renew your pass at {{BUS_PASS_LINK}}."
+        },
+
+        {
+          "intent": "it_wifi_support",
+          "topic": "Wi-Fi & IT support",
+          "utterances": [
+            "wifi not working",
+            "how to connect to campus wifi",
+            "forgot my portal password",
+            "login issues",
+            "reset my password",
+            "internet problem",
+            "student portal not opening",
+            "email login help",
+            "IT helpdesk contact",
+            "wifi password"
+          ],
+          "response": "For Wi-Fi and login issues, use your student credentials at {{WIFI_LOGIN_INFO}}. Reset passwords at {{PASSWORD_RESET_LINK}}. For unresolved issues, contact IT helpdesk at {{IT_HELPDESK_CONTACT}}."
+        },
+
+        {
+          "intent": "grievance_complaint",
+          "topic": "Grievance / complaint",
+          "utterances": [
+            "how to file a complaint",
+            "I have a grievance",
+            "report a problem",
+            "student grievance cell",
+            "how to raise a concern",
+            "complaint against faculty",
+            "anti ragging complaint",
+            "harassment complaint",
+            "where to submit a complaint",
+            "grievance redressal"
+          ],
+          "response": "File grievances confidentially at {{GRIEVANCE_LINK}} or contact the Grievance Redressal Cell at {{GRIEVANCE_CONTACT}}. Anti-ragging and harassment complaints can also use the helpline {{HELPLINE_NUMBER}}. All complaints are handled confidentially."
+        },
+
+        {
+          "intent": "course_registration",
+          "topic": "Course / elective registration",
+          "utterances": [
+            "how to register for electives",
+            "course registration deadline",
+            "how to choose subjects",
+            "add or drop a course",
+            "elective selection",
+            "registration portal",
+            "when does registration open",
+            "how to change my elective",
+            "credit requirements",
+            "subject enrollment"
+          ],
+          "response": "Register for courses and electives at {{REGISTRATION_PORTAL}} during the registration window ({{REGISTRATION_DATES}}). You need {{CREDIT_REQUIREMENT}} credits. For add/drop, follow the process at {{ADD_DROP_LINK}}."
+        }
+      ]
+    }
+  },
+
+  "common_intents": {
+    "description": "Intents useful across all audiences",
+    "intents": [
+
+      {
+        "intent": "talk_to_human",
+        "topic": "Talk to a human / contact",
+        "utterances": [
+          "I want to talk to someone",
+          "contact number of admission office",
+          "office timings",
+          "how to reach the college",
+          "talk to a person",
+          "connect me to staff",
+          "customer care number",
+          "email address of college",
+          "I need human help",
+          "speak to a representative"
+        ],
+        "response": "You can reach us at {{CONTACT_NUMBER}} or {{EMAIL}}. Office hours: {{OFFICE_HOURS}}. Address: {{COLLEGE_ADDRESS}}. Would you like me to connect you to a specific department?"
+      },
+
+      {
+        "intent": "greeting",
+        "topic": "Greeting",
+        "utterances": [
+          "hi",
+          "hello",
+          "hey",
+          "good morning",
+          "namaste",
+          "hi there",
+          "hello bot",
+          "start",
+          "hey there",
+          "help"
+        ],
+        "response": "Hello! I'm the {{COLLEGE_NAME}} help bot. I can help with admissions, courses, fees, scholarships, hostel, placements, exams, certificates, and more. What would you like to know?"
+      },
+
+      {
+        "intent": "thanks",
+        "topic": "Thanks / closing",
+        "utterances": [
+          "thank you",
+          "thanks",
+          "thanks a lot",
+          "ok thank you",
+          "that helped",
+          "great thanks",
+          "thank you so much",
+          "cool thanks",
+          "appreciate it",
+          "ok bye"
+        ],
+        "response": "You're welcome! Feel free to ask anytime. All the best!"
+      },
+
+      {
+        "intent": "fallback",
+        "topic": "Fallback (unmatched queries)",
+        "utterances": [
+          "(This intent triggers automatically when the bot does not understand the query)"
+        ],
+        "response": "Sorry, I didn't quite understand that. You can ask me about admissions, courses, fees, scholarships, hostel, placements, exams, or certificates. Or type 'talk to a human' to contact our office at {{CONTACT_NUMBER}}."
+      }
+    ]
+  },
+
+  "setup_tips": [
+    "Give 'fees', 'placements', and 'admission process' the most utterances - they get asked most.",
+    "Always keep a 'talk_to_human' and 'fallback' route so no student hits a dead end.",
+    "Add regional-language utterances if your students commonly use them.",
+    "For time-bound answers (deadlines, cutoffs, results), update the placeholder values each academic year.",
+    "Test the bot with real student phrasings, including typos and short forms."
+  ]
+}

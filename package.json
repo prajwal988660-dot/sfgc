@@ -1,22 +1,32 @@
 {
-  "name": "sfgc-recreation",
+  "name": "sfgc-platform",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
-  "description": "Inspired redesign of Seshadripuram First Grade College (SFGC) website",
+  "description": "St. Francis de Sales / Seshadripuram First Grade College — unified platform: API backend, public website, teacher app and student app.",
+  "workspaces": [
+    "packages/*",
+    "backend",
+    "web",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=18.18"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.110.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.8"
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:web": "npm run dev --workspace web",
+    "dev:teacher": "npm run start --workspace teacher-app",
+    "dev:student": "npm run start --workspace student-app",
+    "build:backend": "npm run build --workspace backend",
+    "build:web": "npm run build --workspace web",
+    "build:shared": "npm run build --workspace @sfgc/shared",
+    "build": "npm run build:shared && npm run build:backend && npm run build:web",
+    "db:generate": "npm run db:generate --workspace backend",
+    "db:push": "npm run db:push --workspace backend",
+    "db:migrate": "npm run db:migrate --workspace backend",
+    "db:seed": "npm run db:seed --workspace backend",
+    "db:studio": "npm run db:studio --workspace backend",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "smoke": "node scripts/smoke-test.mjs"
   }
 }

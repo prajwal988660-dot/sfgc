@@ -1,0 +1,289 @@
+// =============================================================================
+//  SFGC Platform — Prisma schema
+//  Target: PostgreSQL (Supabase)
+//
+//  DATABASE_URL -> pooled connection (pgbouncer, port 6543) used at runtime
+//  DIRECT_URL   -> direct connection (port 5432) used by Prisma Migrate
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------- enums ----
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum NoticeAudience {
+  ALL
+  STUDENTS
+  TEACHERS
+}
+
+enum RegistrationStatus {
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+}
+
+// ----------------------------------------------------------------- user ----
+
+/// A single account table for all three roles. Role-specific columns are
+/// nullable; which ones are required is enforced at the API validation layer
+/// (see backend/src/validators) rather than in the database, so that a user's
+/// role can be changed by an admin without a migration.
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String
+  name         String
+  role         Role    @default(STUDENT)
+  phone        String?
+  avatarUrl    String?
+  isActive     Boolean @default(true)
+
+  // --- student fields ---
+  /// College register number, e.g. "SFGC101". Unique when present.
+  registerNo String? @unique
+  program    String? // "BCA", "B.Com", "MBA" ...
+  semester   Int?
+  section    String? // "A", "B" ...
+  admissionYear Int?
+  guardianName  String?
+  guardianPhone String?
+
+  // --- teacher fields ---
+  employeeId  String? @unique
+  designation String? // "Assistant Professor" ...
+  department  String? // shared by teachers and students
+
+  /// Expo push token, set by the mobile apps so the backend can notify
+  /// this user when a notice targeting them is published.
+  expoPushToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- relations ---
+  taughtSubjects     Subject[]           @relation("SubjectTeacher")
+  enrolledSubjects   Subject[]           @relation("SubjectEnrollment")
+  attendance         Attendance[]        @relation("StudentAttendance")
+  attendanceMarked   Attendance[]        @relation("AttendanceMarkedBy")
+  progressCards      ProgressCard[]      @relation("StudentProgress")
+  progressRecorded   ProgressCard[]      @relation("ProgressRecordedBy")
+  eventsCreated      Event[]             @relation("EventCreatedBy")
+  eventRegistrations EventRegistration[] @relation("UserRegistrations")
+  noticesAuthored    Notice[]            @relation("NoticeAuthor")
+
+  @@index([role])
+  @@index([program, semester, section])
+  @@map("users")
+}
+
+// -------------------------------------------------------------- subject ----
+
+/// A taught subject for one program + semester + section. The triple
+/// (program, semester, section) is what the teacher app presents as a "class".
+model Subject {
+  id       String  @id @default(cuid())
+  code     String  @unique // "BCA301"
+  name     String // "Database Management Systems"
+  program  String // "BCA"
+  semester Int
+  section  String? // "A"
+  credits  Int     @default(4)
+  department String?
+  academicYear String @default("2026-27")
+  isActive Boolean @default(true)
+
+  teacherId String?
+  teacher   User?   @relation("SubjectTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+
+  /// Students enrolled in this subject. Implicit many-to-many; Prisma manages
+  /// the join table. This is the roster the teacher app marks attendance on.
+  students User[] @relation("SubjectEnrollment")
+
+  attendance    Attendance[]
+  progressCards ProgressCard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teacherId])
+  @@index([program, semester, section])
+  @@map("subjects")
+}
+
+// ----------------------------------------------------------- attendance ----
+
+/// One row per student, per subject, per calendar day. The composite unique
+/// key makes re-marking a day an idempotent upsert instead of a duplicate.
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  subjectId String
+  date      DateTime         @db.Date
+  status    AttendanceStatus
+  remarks   String?
+
+  markedById String
+  markedBy   User   @relation("AttendanceMarkedBy", fields: [markedById], references: [id])
+
+  student User    @relation("StudentAttendance", fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, subjectId, date])
+  @@index([subjectId, date])
+  @@index([studentId])
+  @@map("attendance")
+}
+
+// ---------------------------------------------------------------- event ----
+
+model Event {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  category    String   @default("Event") // "Fest", "Workshop", "Seminar", "Sports"
+  startsAt    DateTime
+  endsAt      DateTime?
+  venue       String?
+  coverImage  String?
+  /// Registration fee in INR. 0 means free.
+  fee         Int      @default(0)
+  /// Null means unlimited seats.
+  capacity    Int?
+  registrationOpen Boolean @default(true)
+  isPublished      Boolean @default(true)
+  organizer    String?
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+
+  createdById String?
+  createdBy   User?   @relation("EventCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  registrations EventRegistration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startsAt])
+  @@index([isPublished])
+  @@map("events")
+}
+
+/// Registrations accept both logged-in users (mobile apps) and anonymous
+/// visitors (public website form), hence userId is optional but the contact
+/// fields are always required.
+model EventRegistration {
+  id         String             @id @default(cuid())
+  ticketCode String             @unique
+  eventId    String
+  userId     String?
+  name       String
+  email      String
+  phone      String?
+  college    String?
+  teamName   String?
+  /// Comma-separated additional participants for team events.
+  teamMembers String?
+  status     RegistrationStatus @default(CONFIRMED)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User? @relation("UserRegistrations", fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// One registration per email per event.
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@index([userId])
+  @@map("event_registrations")
+}
+
+// --------------------------------------------------------------- notice ----
+
+model Notice {
+  id       String         @id @default(cuid())
+  title    String
+  body     String
+  category String         @default("General") // "Exam", "Event", "Holiday", "Placement"
+  audience NoticeAudience @default(ALL)
+  pinned   Boolean        @default(false)
+  attachmentUrl String?
+  /// Optional narrowing so a notice can target one program/semester only.
+  program  String?
+  semester Int?
+
+  publishedAt DateTime  @default(now())
+  expiresAt   DateTime?
+
+  authorId String
+  author   User   @relation("NoticeAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([audience, publishedAt])
+  @@index([pinned])
+  @@map("notices")
+}
+
+// --------------------------------------------------------- progress card ----
+
+/// One row per student, per subject, per semester — a single line on the
+/// printed progress card. The API aggregates these rows into a card with
+/// totals, percentage and SGPA.
+model ProgressCard {
+  id           String @id @default(cuid())
+  studentId    String
+  subjectId    String
+  semester     Int
+  academicYear String @default("2026-27")
+
+  internalMarks Int?
+  maxInternal   Int  @default(40)
+  externalMarks Int?
+  maxExternal   Int  @default(60)
+  grade         String?
+  credits       Int  @default(4)
+  remarks       String?
+
+  isPublished Boolean @default(false)
+
+  recordedById String?
+  recordedBy   User?   @relation("ProgressRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  student User    @relation("StudentProgress", fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, subjectId, semester, academicYear])
+  @@index([studentId, semester])
+  @@map("progress_cards")
+}

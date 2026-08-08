@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 213 55% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 213 55% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 55% 12%;
+
+    /* Deep institutional navy */
+    --primary: 213 72% 19%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Heritage maroon */
+    --maroon: 340 71% 24%;
+    --maroon-foreground: 0 0% 100%;
+
+    /* Gold accent — used sparingly */
+    --gold: 45 68% 47%;
+    --gold-foreground: 213 55% 12%;
+
+    --secondary: 213 40% 96%;
+    --secondary-foreground: 213 72% 19%;
+
+    --muted: 213 30% 96%;
+    --muted-foreground: 213 16% 42%;
+
+    --accent: 45 68% 47%;
+    --accent-foreground: 213 55% 12%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 213 25% 89%;
+    --input: 213 25% 89%;
+    --ring: 213 72% 30%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 213 45% 7%;
+    --foreground: 210 30% 96%;
+
+    --card: 213 40% 10%;
+    --card-foreground: 210 30% 96%;
+
+    --popover: 213 40% 10%;
+    --popover-foreground: 210 30% 96%;
+
+    --primary: 213 65% 62%;
+    --primary-foreground: 213 45% 7%;
+
+    --maroon: 340 55% 55%;
+    --maroon-foreground: 213 45% 7%;
+
+    --gold: 45 72% 58%;
+    --gold-foreground: 213 45% 7%;
+
+    --secondary: 213 32% 16%;
+    --secondary-foreground: 210 30% 96%;
+
+    --muted: 213 32% 16%;
+    --muted-foreground: 213 15% 65%;
+
+    --accent: 45 72% 58%;
+    --accent-foreground: 213 45% 7%;
+
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 213 28% 20%;
+    --input: 213 28% 20%;
+    --ring: 213 65% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Sticky navbar height, so in-page anchors do not hide under it. */
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  ::selection {
+    @apply bg-primary/15;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* Frosted panel used by the navbar and floating cards. */
+  .glass {
+    @apply border border-white/15 bg-white/70 backdrop-blur-xl backdrop-saturate-150;
+  }
+
+  .dark .glass {
+    @apply border-white/10 bg-slate-950/60;
+  }
+
+  .glass-dark {
+    @apply border border-white/15 bg-primary-950/50 backdrop-blur-xl backdrop-saturate-150;
+  }
+
+  /* Section rhythm — one class so every band on the page breathes alike. */
+  .section {
+    @apply py-20 md:py-28;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10
+           px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-gold-700
+           dark:text-gold-300;
+  }
+
+  .heading-xl {
+    @apply text-4xl font-bold leading-[1.05] sm:text-5xl lg:text-6xl;
+  }
+
+  .heading-lg {
+    @apply text-3xl font-bold leading-tight sm:text-4xl lg:text-[2.75rem];
+  }
+
+  .lede {
+    @apply text-lg leading-relaxed text-muted-foreground sm:text-xl;
+  }
+
+  /* Gold underline that draws in on hover — used on nav links. */
+  .link-underline {
+    @apply relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0
+           after:rounded-full after:bg-gold after:transition-[width] after:duration-300
+           hover:after:w-full;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-br from-white via-white to-gold-200 bg-clip-text text-transparent;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Fades the edges of a horizontally scrolling strip. */
+  .mask-fade-x {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 6%,
+      black 94%,
+      transparent
+    );
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Respect the OS "reduce motion" setting — Framer Motion reads this too, but
+   CSS animations need telling separately. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
