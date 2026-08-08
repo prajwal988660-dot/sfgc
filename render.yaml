@@ -17,10 +17,14 @@ services:
     # ap-south-1 (Mumbai). Frankfurt or Oregon would add ~150ms per query.
     region: singapore
 
-    # Installs the whole npm workspace from the repo root — the backend depends
-    # on the root lockfile. `postinstall` in backend/package.json runs
-    # `prisma generate`, so the client is built automatically.
-    buildCommand: npm install && npm run build --workspace backend
+    # Installs ONLY the backend workspace plus the root lockfile entries.
+    #
+    # A plain `npm install` here would also pull Next.js, React Native and both
+    # Expo apps — over a gigabyte of node_modules that the API never imports,
+    # which exhausts the 512 MB free instance and fails the build. The backend
+    # deliberately has no dependency on @sfgc/shared, so this is everything it
+    # needs. `postinstall` in backend/package.json runs `prisma generate`.
+    buildCommand: npm install --workspace backend --include-workspace-root && npm run build --workspace backend
     startCommand: node backend/dist/server.js
 
     # Render restarts the service if this stops returning 200. The route
