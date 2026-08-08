@@ -24,7 +24,11 @@ services:
     # which exhausts the 512 MB free instance and fails the build. The backend
     # deliberately has no dependency on @sfgc/shared, so this is everything it
     # needs. `postinstall` in backend/package.json runs `prisma generate`.
-    buildCommand: npm install --workspace backend --include-workspace-root && npm run build --workspace backend
+    # `--include=dev` is REQUIRED. NODE_ENV=production is set below, and npm
+    # then omits devDependencies by default — which drops typescript and every
+    # @types/* package, so `tsc` fails with "Could not find a declaration file
+    # for module 'express'". The build needs them; the running server does not.
+    buildCommand: npm install --workspace backend --include-workspace-root --include=dev && npm run build --workspace backend
     startCommand: node backend/dist/server.js
 
     # Render restarts the service if this stops returning 200. The route
