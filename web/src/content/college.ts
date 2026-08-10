@@ -396,10 +396,12 @@ export const NAV_LINKS = [
 /**
  * The two mobile apps offered for download on the site.
  *
- * `file` is a path under web/public. The download section checks whether that
- * file actually exists at render time, so dropping a new APK in is the only
- * step needed to publish it — and a missing build shows an honest "coming
- * soon" state instead of a broken link.
+ * `file` is the local fallback path under web/public, used while a build is
+ * sitting on a developer's machine. What the deployed site actually links to
+ * comes from web/public/downloads/manifest.json, written by
+ * `./scripts/build-apk.sh <app> --publish` — the APKs themselves are too large
+ * to commit. A build that is in neither place shows an honest "coming soon"
+ * state instead of a broken link.
  */
 export const APP_DOWNLOADS = [
   {

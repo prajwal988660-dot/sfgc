@@ -24,42 +24,106 @@ const ICONS: Record<string, LucideIcon> = {
 
 interface BuildInfo {
   exists: boolean
+  /** Where the Download button points — a GitHub release asset, or a local path. */
+  href: string | null
   /** Human-readable size, e.g. "42.7 MB". */
   size: string | null
-  /** Date the file was last written, e.g. "10 Aug 2026". */
+  /** Date the build was published, e.g. "10 Aug 2026". */
   updated: string | null
+  /** Set only for published builds, e.g. "1.0.0". */
+  version: string | null
+}
+
+/** One entry of web/public/downloads/manifest.json. */
+interface PublishedBuild {
+  url: string
+  version: string
+  /** Size in bytes, recorded at publish time. */
+  size: number
+  /** ISO 8601 timestamp. */
+  published: string
 }
 
 /**
- * Reads the APK straight off disk at render time.
- *
- * This is a Server Component, so publishing a new build is just dropping the
- * file into web/public/downloads — no config to edit, no link that silently
- * 404s because a build has not happened yet.
+ * The APKs are ~45 MB each and are deliberately gitignored, so they never
+ * reach the Vercel build. `scripts/build-apk.sh --publish` uploads them to a
+ * GitHub release instead and records the resulting URL, size and date in this
+ * manifest — which is small enough to commit, and is therefore the only thing
+ * the deployed site can actually read.
  */
-function readBuild(publicPath: string): BuildInfo {
+function readManifest(): Record<string, PublishedBuild> {
+  try {
+    const file = path.join(process.cwd(), 'public', 'downloads', 'manifest.json')
+    return JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, PublishedBuild>
+  } catch {
+    return {}
+  }
+}
+
+function formatSize(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+const MISSING: BuildInfo = {
+  exists: false,
+  href: null,
+  size: null,
+  updated: null,
+  version: null,
+}
+
+/**
+ * Resolves what the Download button should do for one app.
+ *
+ * A published build (from the manifest) wins, because that is what students
+ * can actually reach. Falling back to a file sitting in web/public/downloads
+ * keeps `./scripts/build-apk.sh` alone useful during development: the build
+ * appears on localhost immediately, before anyone decides to publish it.
+ */
+function readBuild(publicPath: string, published: PublishedBuild | undefined): BuildInfo {
+  if (published?.url) {
+    const date = new Date(published.published)
+    return {
+      exists: true,
+      href: published.url,
+      size: formatSize(published.size),
+      updated: Number.isNaN(date.getTime()) ? null : formatDate(date),
+      version: published.version ?? null,
+    }
+  }
+
   try {
     const filePath = path.join(process.cwd(), 'public', publicPath)
     const stat = fs.statSync(filePath)
     if (!stat.isFile() || stat.size === 0) {
-      return { exists: false, size: null, updated: null }
+      return MISSING
     }
     return {
       exists: true,
-      size: `${(stat.size / 1024 / 1024).toFixed(1)} MB`,
-      updated: stat.mtime.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }),
+      href: publicPath,
+      size: formatSize(stat.size),
+      updated: formatDate(stat.mtime),
+      version: null,
     }
   } catch {
-    return { exists: false, size: null, updated: null }
+    return MISSING
   }
 }
 
 export function AppDownloadSection() {
-  const apps = APP_DOWNLOADS.map((app) => ({ ...app, build: readBuild(app.file) }))
+  const manifest = readManifest()
+  const apps = APP_DOWNLOADS.map((app) => ({
+    ...app,
+    build: readBuild(app.file, manifest[app.key]),
+  }))
   const anyAvailable = apps.some((app) => app.build.exists)
 
   return (
@@ -147,15 +211,19 @@ export function AppDownloadSection() {
                           variant={isMaroon ? 'maroon' : 'default'}
                           className="w-full"
                         >
-                          {/* `download` makes the browser save the file rather
-                              than try to navigate to it. */}
-                          <a href={app.file} download>
+                          {/* `download` only forces a save for same-origin
+                              files, which is the local-build case. A published
+                              build points at GitHub, which serves the asset
+                              with Content-Disposition: attachment anyway. */}
+                          <a href={app.build.href ?? app.file} download>
                             <Download className="h-4 w-4" aria-hidden="true" />
                             Download APK
                           </a>
                         </Button>
                         <p className="mt-3 text-center text-xs text-muted-foreground">
-                          Android · {app.build.size} · updated {app.build.updated}
+                          Android
+                          {app.build.version ? ` · v${app.build.version}` : ''} ·{' '}
+                          {app.build.size} · updated {app.build.updated}
                         </p>
                       </>
                     ) : (
@@ -204,13 +272,17 @@ export function AppDownloadSection() {
                 </li>
               ))}
             </ol>
-            <p className="mt-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {/* A div, not a p: Badge renders a div, and a div inside a p is
+                invalid HTML that the browser silently restructures — which
+                then fails to match the server output and breaks hydration for
+                the whole page. */}
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline">Android only</Badge>
               <span>
                 An iPhone version is not available. These apps are distributed by the
                 college, not through the Play Store.
               </span>
-            </p>
+            </div>
           </Reveal>
         ) : null}
       </div>
