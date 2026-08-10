@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 
 import { AboutSection } from '@/components/home/about-section'
+import { AppDownloadSection } from '@/components/home/app-download-section'
 import { CtaSection } from '@/components/home/cta-section'
 import { DepartmentsSection } from '@/components/home/departments-section'
 import { EventsSection } from '@/components/home/events-section'
@@ -194,6 +195,10 @@ export default function HomePage() {
           band above it, where the tonal step is deliberately small. */}
       <div className="border-t border-border/60 bg-background">
         <GallerySection />
+      </div>
+
+      <div className="border-t border-border/60 bg-secondary/40">
+        <AppDownloadSection />
       </div>
 
       <CtaSection />

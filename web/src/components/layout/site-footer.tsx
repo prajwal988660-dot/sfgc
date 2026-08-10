@@ -24,9 +24,13 @@ const EXPLORE: readonly FooterLink[] = NAV_LINKS
  * The second list reuses NAV_LINKS entries rather than restating their routes,
  * so a route rename in the content file cannot leave a dead link down here.
  */
-const QUICK_ACCESS: FooterLink[] = ['Admissions', 'Placements', 'Notices', 'Events']
-  .map((label) => EXPLORE.find((item) => item.label === label))
-  .filter((item): item is FooterLink => Boolean(item))
+const QUICK_ACCESS: FooterLink[] = [
+  ...(['Admissions', 'Placements', 'Notices', 'Events'] as const)
+    .map((label) => EXPLORE.find((item) => item.label === label))
+    .filter((item): item is FooterLink => Boolean(item)),
+  // Not a NAV_LINKS route — an anchor into the homepage download section.
+  { label: 'Download the apps', href: '/#apps' },
+]
 
 const SOCIAL_ICONS: Record<string, LucideIcon | undefined> = {
   Facebook,

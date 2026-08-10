@@ -393,6 +393,49 @@ export const NAV_LINKS = [
   { label: 'Contact', href: '/contact' },
 ] as const
 
+/**
+ * The two mobile apps offered for download on the site.
+ *
+ * `file` is a path under web/public. The download section checks whether that
+ * file actually exists at render time, so dropping a new APK in is the only
+ * step needed to publish it — and a missing build shows an honest "coming
+ * soon" state instead of a broken link.
+ */
+export const APP_DOWNLOADS = [
+  {
+    key: 'student',
+    name: 'SFGC Student',
+    audience: 'For students',
+    file: '/downloads/sfgc-student.apk',
+    accent: 'maroon' as const,
+    icon: 'GraduationCap',
+    blurb:
+      'Check your attendance percentage subject by subject, open your progress card, register for events and get every college notice the moment it is posted.',
+    features: [
+      'Attendance % with a 75% eligibility warning',
+      'Progress card with marks and SGPA',
+      'Event registration with a ticket code',
+      'Push notifications for new notices',
+    ],
+  },
+  {
+    key: 'teacher',
+    name: 'SFGC Teacher',
+    audience: 'For teaching staff',
+    file: '/downloads/sfgc-teacher.apk',
+    accent: 'primary' as const,
+    icon: 'ClipboardCheck',
+    blurb:
+      'Mark attendance for your classes in a couple of taps, review who is falling below the threshold, and post notices that reach students instantly.',
+    features: [
+      'Mark attendance for any class you teach',
+      'Class reports with at-risk students first',
+      'Post notices to students or staff',
+      'Works offline-tolerant on college Wi-Fi',
+    ],
+  },
+] as const
+
 export const ADMISSION_STEPS = [
   {
     step: 1,
