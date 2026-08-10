@@ -81,6 +81,25 @@ PORT=10000
 CORS_ORIGINS=https://your-site.vercel.app
 ```
 
+Optional — only needed for picture uploads in the staff panel at `/admin`:
+
+```env
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<the service_role key, NOT the anon key>
+SUPABASE_MEDIA_BUCKET=media
+```
+
+Create the bucket first: **Storage → New bucket → `media` → tick "Public bucket"**. The
+keys are under **Project Settings → API**.
+
+Leave these unset and the API still boots and serves everything else; `/api/media/upload`
+answers that it is not configured, and the panel disables its upload button and offers a
+paste-a-URL field instead.
+
+`service_role` bypasses row-level security. It belongs on the API only — never in
+`web/.env.local`, and never in an `EXPO_PUBLIC_*` variable, both of which ship to the
+client.
+
 Generate the secret with:
 
 ```bash
