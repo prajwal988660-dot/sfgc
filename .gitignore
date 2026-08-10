@@ -28,6 +28,16 @@ out/
 android/
 ios/
 
+# app signing — a leaked keystore lets anyone publish an update that phones
+# will accept as genuine. Never commit these.
+credentials/
+*.keystore
+signing.properties
+
+# built apps
+*.apk
+*.aab
+
 # eas
 .easignore
 

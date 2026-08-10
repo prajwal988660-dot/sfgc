@@ -105,6 +105,33 @@ the phone must be on the same Wi-Fi.
 
 ## 5 · Building the APKs
 
+### Locally (no Expo account)
+
+If this machine has Android Studio — or just the Android SDK plus a JDK — build
+straight from here:
+
+```bash
+./scripts/build-apk.sh student
+./scripts/build-apk.sh teacher
+```
+
+Each run generates the native project, applies the release signing config, runs
+Gradle, and copies the finished APK to `web/public/downloads/`, which is exactly
+where the website's download section looks. The first build takes 10–20 minutes
+while Gradle fetches dependencies; later ones are far quicker.
+
+The script refuses to build quietly against a LAN address, because an APK with
+`192.168.x.x` baked in only works on the developer's wifi.
+
+**Signing.** Each app has its own release keystore under
+`apps/<app>/credentials/`, generated on first setup and **gitignored**. Keep a
+backup somewhere safe: Android will refuse to install an update signed with a
+different key, so losing it means every student has to uninstall and reinstall.
+
+### Via EAS (cloud build)
+
+Useful when you have no Android toolchain, or want iOS later.
+
 ```bash
 npm i -g eas-cli
 eas login
