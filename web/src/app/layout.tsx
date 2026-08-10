@@ -6,6 +6,7 @@ import './globals.css'
 import { COLLEGE } from '@/content/college'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
+import { SiteChrome } from '@/components/layout/site-chrome'
 import { themeInitScript } from '@/lib/theme'
 
 const inter = Inter({
@@ -79,9 +80,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
 
-        <SiteHeader />
-        <main id="main">{children}</main>
-        <SiteFooter />
+        <SiteChrome header={<SiteHeader />} footer={<SiteFooter />}>
+          {children}
+        </SiteChrome>
 
         <Toaster
           position="top-center"

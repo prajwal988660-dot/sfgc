@@ -338,6 +338,24 @@ export interface PublicStats {
   placementRate: number
 }
 
+/** What the server reports about its upload capability. */
+export interface MediaConfig {
+  /** False when the storage secrets are not set; uploads will be refused. */
+  configured: boolean
+  maxBytes: number
+  allowedTypes: string[]
+}
+
+/** One stored image, as returned by a successful upload. */
+export interface UploadedMedia {
+  /** Public URL, ready to store in `coverImage` or `attachmentUrl`. */
+  url: string
+  /** Object name inside the bucket. */
+  path: string
+  size: number
+  contentType: string
+}
+
 export interface LoginInput {
   identifier: string
   password: string

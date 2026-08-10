@@ -6,12 +6,14 @@ import { COLLEGE } from '@/content/college'
 const BASE_URL = COLLEGE.website.replace(/\/$/, '')
 
 /**
- * The public site is entirely public — there is nothing here a crawler should
- * be kept out of, so every user agent is allowed everything.
+ * Everything a visitor is meant to read is crawlable. /admin is the one
+ * exception — the staff panel behind it is protected by a password, not by
+ * being unlisted, but keeping it out of search results spares it the constant
+ * background traffic of bots probing login forms.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/' }],
+    rules: [{ userAgent: '*', allow: '/', disallow: '/admin' }],
     sitemap: `${BASE_URL}/sitemap.xml`,
     host: BASE_URL,
   }

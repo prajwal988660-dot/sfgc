@@ -25,6 +25,8 @@ import type {
   PaginationMeta,
   ProgressCard,
   PublicStats,
+  MediaConfig,
+  UploadedMedia,
   RegisterInput,
   SaveProgressInput,
   StudentAttendance,
@@ -83,6 +85,8 @@ interface RequestOptions {
   /** Next.js fetch cache hints; ignored on React Native. */
   cache?: 'force-cache' | 'no-store'
   revalidate?: number
+  /** Overrides the client-wide timeout for this one call. */
+  timeoutMs?: number
 }
 
 /** A response that carried pagination metadata alongside its data. */
@@ -121,11 +125,16 @@ export class ApiClient {
     const { method = 'GET', body, query, anonymous, signal } = opts
     const url = `${this.baseUrl}${path}${buildQuery(query)}`
 
+    // FormData carries its own multipart Content-Type, including a boundary
+    // only the runtime can generate. Setting the header by hand omits that
+    // boundary and the server then parses zero fields out of a valid body.
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+
     const headers: Record<string, string> = {
       Accept: 'application/json',
       ...this.options.headers,
     }
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
 
     if (!anonymous && this.options.getToken) {
       const token = await this.options.getToken()
@@ -134,7 +143,7 @@ export class ApiClient {
 
     // Combine the caller's signal with our own timeout.
     const controller = new AbortController()
-    const timeoutMs = this.options.timeoutMs ?? 20_000
+    const timeoutMs = opts.timeoutMs ?? this.options.timeoutMs ?? 20_000
     const timer = setTimeout(() => controller.abort(), timeoutMs)
     if (signal) {
       if (signal.aborted) controller.abort()
@@ -146,7 +155,12 @@ export class ApiClient {
       response = await fetch(url, {
         method,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body:
+          body === undefined
+            ? undefined
+            : isFormData
+              ? (body as FormData)
+              : JSON.stringify(body),
         signal: controller.signal,
         // Next.js-only hints; harmless elsewhere.
         ...(opts.cache ? { cache: opts.cache } : {}),
@@ -312,6 +326,8 @@ export class ApiClient {
     list: (query?: {
       upcoming?: boolean
       past?: boolean
+      /** Staff only — the API ignores it for everyone else. */
+      includeUnpublished?: boolean
       category?: string
       q?: string
       page?: number
@@ -359,6 +375,35 @@ export class ApiClient {
 
     remove: (id: string) =>
       this.request<{ id: string }>(`/notices/${id}`, { method: 'DELETE' }),
+  }
+
+  // ------------------------------------------------------------ media ----
+
+  media = {
+    /**
+     * Whether the server can accept uploads at all, plus the limits it will
+     * enforce. Lets a caller explain itself before the admin picks a file.
+     */
+    config: () =>
+      this.request<MediaConfig>('/media/config'),
+
+    /**
+     * Uploads one image and returns its public URL, for storing in
+     * `event.coverImage` or `notice.attachmentUrl`.
+     *
+     * Takes a `File` or `Blob` so the same call works from a browser file
+     * input. The upload allowance is generous compared with a JSON request —
+     * a phone photo over a college connection outlasts the default timeout.
+     */
+    upload: (file: Blob, filename?: string) => {
+      const form = new FormData()
+      form.append('file', file, filename ?? (file as File).name ?? 'upload')
+      return this.request<UploadedMedia>('/media/upload', {
+        method: 'POST',
+        body: form,
+        timeoutMs: 120_000,
+      })
+    },
   }
 
   // --------------------------------------------------------- progress ----

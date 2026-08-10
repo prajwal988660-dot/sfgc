@@ -20,6 +20,13 @@ const schema = z.object({
 
   SEED_ADMIN_EMAIL: z.string().email().default('admin@sfgc.ac.in'),
   SEED_ADMIN_PASSWORD: z.string().min(6).default('Admin@123'),
+
+  // Image uploads for the admin panel. Optional on purpose: the API must boot
+  // and serve everything else on an install where storage was never set up,
+  // with only the upload route reporting itself unavailable.
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  SUPABASE_MEDIA_BUCKET: z.string().min(1).default('media'),
 })
 
 const parsed = schema.safeParse(process.env)

@@ -11,9 +11,11 @@ out/
 *.tsbuildinfo
 
 # env
+# `.env.*` rather than a list: a stray .env.bak or .env.old holds the same
+# database password as the real thing, and the previous rules did not cover
+# them. The negation below keeps the committed template visible.
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 
 # expo
