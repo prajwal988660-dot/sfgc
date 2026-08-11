@@ -120,6 +120,32 @@ sed -i '/^# --- SFGC release signing/,/^SFGC_KEY_PASSWORD=/d' android/gradle.pro
   echo "SFGC_KEY_PASSWORD=$SFGC_KEY_PASSWORD"
 } >> android/gradle.properties
 
+# ---------------------------------------------------------------- version ----
+#
+# `expo prebuild` copies the version out of app.json into build.gradle once, at
+# generation time. Because this script reuses an existing android/ directory,
+# a later version bump in app.json would otherwise never reach the APK — the
+# build would succeed, be published under the new tag, and still identify
+# itself as the old version. Android would then refuse it as an update, since
+# versionCode had not moved.
+log "Syncing the version from app.json"
+
+APP_VERSION=$(node -e \
+  "const fs=require('fs');console.log(JSON.parse(fs.readFileSync(process.argv[1],'utf8')).expo.version)" \
+  "$APP_DIR/app.json")
+APP_VERSION_CODE=$(node -e \
+  "const fs=require('fs');const j=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(j.expo.android&&j.expo.android.versionCode||1)" \
+  "$APP_DIR/app.json")
+
+sed -i -E "s/^(\s*)versionCode [0-9]+$/\1versionCode $APP_VERSION_CODE/" android/app/build.gradle
+sed -i -E "s/^(\s*)versionName \".*\"$/\1versionName \"$APP_VERSION\"/" android/app/build.gradle
+
+grep -qE "versionName \"$APP_VERSION\"" android/app/build.gradle || {
+  echo "Failed to set the version in android/app/build.gradle" >&2
+  exit 1
+}
+echo "  $APP_VERSION (versionCode $APP_VERSION_CODE)"
+
 # Build only the two architectures real phones use. x86 and x86_64 exist for
 # the Android emulator; shipping them adds ~35 MB to the download and a large
 # chunk of compile time for something no student's device will ever load.
