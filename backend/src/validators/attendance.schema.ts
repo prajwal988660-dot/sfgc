@@ -73,10 +73,22 @@ const attendanceRecordSchema = z.object({
     .transform((value) => (value ? value : null)),
 })
 
+/**
+ * Which hour of the day the class ran. Defaults to 1 so a caller that predates
+ * periods — the current teacher app build, for one — keeps working unchanged
+ * instead of failing validation.
+ */
+export const periodNumberSchema = z.coerce
+  .number()
+  .int('A period is a whole number.')
+  .min(1, 'Periods start at 1.')
+  .max(12, 'A college day does not have more than 12 periods.')
+
 export const markAttendanceSchema = z
   .object({
     subjectId: idSchema,
     date: calendarDaySchema.optional(),
+    periodNumber: periodNumberSchema.default(1),
     records: z
       .array(attendanceRecordSchema)
       .min(1, 'Include at least one student to mark.')
@@ -120,6 +132,9 @@ export const classAttendanceQuerySchema = z
     date: calendarDaySchema.optional(),
     from: calendarDaySchema.optional(),
     to: calendarDaySchema.optional(),
+    /// Narrows the roster read to one hour, so re-opening period 3 shows what
+    /// was marked for period 3 rather than whatever was marked first that day.
+    periodNumber: periodNumberSchema.optional(),
   })
   .refine(orderedRange, rangeIssue)
 

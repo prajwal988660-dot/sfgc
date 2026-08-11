@@ -204,9 +204,11 @@ router.get(
         where: { role: 'STUDENT', enrolledSubjects: { some: { id: subjectId } } },
         select: { id: true, name: true, registerNo: true, avatarUrl: true },
       }),
-      // One query for the whole day, then a lookup per student.
+      // One query for the whole day, then a lookup per student. Narrowed to
+      // the requested hour, so opening period 3 shows what period 3 holds
+      // rather than whatever the first period of the day was marked as.
       prisma.attendance.findMany({
-        where: { subjectId, date: day },
+        where: { subjectId, date: day, periodNumber: query.periodNumber ?? 1 },
         select: { studentId: true, status: true },
       }),
     ])

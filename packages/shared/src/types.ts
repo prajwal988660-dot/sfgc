@@ -131,6 +131,13 @@ export interface AttendanceStats {
 export interface AttendanceRecord {
   id: string
   date: string
+  /** Which hour of the day this class ran. */
+  periodNumber: number
+  /** Null when the period was later removed from the timetable. */
+  periodLabel: string | null
+  /** "HH:mm", 24-hour. Null for the same reason as `periodLabel`. */
+  startTime: string | null
+  endTime: string | null
   status: AttendanceStatus
   remarks?: string | null
   subject: SubjectRef
@@ -146,6 +153,8 @@ export interface StudentRef {
   id: string
   name: string
   registerNo: string | null
+  /** Stream-scoped ID, e.g. "BCA26001". Null for students predating it. */
+  studentCode?: string | null
 }
 
 export interface StudentAttendance {
@@ -159,6 +168,7 @@ export interface ClassAttendanceStudent {
   id: string
   name: string
   registerNo: string | null
+  studentCode?: string | null
   status: AttendanceStatus | null
   stats: { present: number; total: number; percentage: number }
 }
@@ -173,6 +183,8 @@ export interface ClassAttendance {
 export interface MarkAttendanceInput {
   subjectId: string
   date?: string
+  /** Defaults to 1 server-side when omitted. */
+  periodNumber?: number
   records: Array<{
     studentId: string
     status: AttendanceStatus
@@ -183,6 +195,7 @@ export interface MarkAttendanceInput {
 export interface MarkAttendanceResult {
   marked: number
   date: string
+  periodNumber: number
   subjectId: string
 }
 
@@ -336,6 +349,163 @@ export interface PublicStats {
   events: number
   notices: number
   placementRate: number
+}
+
+// ------------------------------------------------- streams and classes ----
+
+/** A programme of study. `code` prefixes every student ID in the stream. */
+export interface Stream {
+  id: string
+  code: string
+  name: string
+  shortName: string | null
+  department: string | null
+  durationSemesters: number
+  isActive: boolean
+  classGroupCount?: number
+  studentCount?: number
+}
+
+export interface StreamInput {
+  code: string
+  name: string
+  shortName?: string | null
+  department?: string | null
+  durationSemesters?: number
+  isActive?: boolean
+}
+
+export interface StreamRef {
+  id: string
+  code: string
+  name: string
+  shortName?: string | null
+}
+
+/** One teachable class: a stream, a semester and a section, for one year. */
+export interface ClassGroup {
+  id: string
+  streamId: string
+  semester: number
+  section: string
+  academicYear: string
+  stream: StreamRef
+  studentCount?: number
+}
+
+export interface ClassGroupInput {
+  streamId: string
+  semester: number
+  section: string
+  academicYear?: string
+}
+
+// --------------------------------------------------------------- periods ----
+
+/** A slot in the daily timetable. `startTime`/`endTime` are 24-hour "HH:mm". */
+export interface Period {
+  id: string
+  number: number
+  label: string | null
+  startTime: string
+  endTime: string
+  isActive: boolean
+}
+
+export interface PeriodInput {
+  number: number
+  label?: string | null
+  startTime: string
+  endTime: string
+  isActive?: boolean
+}
+
+// -------------------------------------------------------------- students ----
+
+export interface ManagedStudent {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  registerNo: string | null
+  studentCode: string | null
+  program: string | null
+  semester: number | null
+  section: string | null
+  admissionYear: number | null
+  guardianName: string | null
+  guardianPhone: string | null
+  isActive: boolean
+  streamId: string | null
+  classGroupId: string | null
+  stream?: StreamRef | null
+  classGroup?: { id: string; semester: number; section: string } | null
+  /**
+   * Only present in the response that created the account, and only when the
+   * caller let the server pick the password. Never readable afterwards.
+   */
+  initialPassword?: string
+}
+
+export interface CreateStudentInput {
+  name: string
+  email: string
+  classGroupId: string
+  password?: string
+  phone?: string | null
+  guardianName?: string | null
+  guardianPhone?: string | null
+  admissionYear?: number
+  registerNo?: string | null
+}
+
+export interface UpdateStudentInput {
+  name?: string
+  email?: string
+  classGroupId?: string
+  phone?: string | null
+  guardianName?: string | null
+  guardianPhone?: string | null
+  isActive?: boolean
+  password?: string
+}
+
+// --------------------------------------------------------------- library ----
+
+export type MaterialKind =
+  | 'NOTES'
+  | 'QUESTION_PAPER'
+  | 'SOLVED_PAPER'
+  | 'SYLLABUS'
+  | 'REFERENCE'
+
+export interface StudyMaterial {
+  id: string
+  title: string
+  description: string | null
+  kind: MaterialKind
+  fileUrl: string
+  fileLabel: string | null
+  semester: number | null
+  isPublished: boolean
+  createdAt: string
+  streamId: string | null
+  subjectId: string | null
+  stream: StreamRef | null
+  subject: SubjectRef | null
+  uploadedBy: { id: string; name: string } | null
+}
+
+export interface StudyMaterialInput {
+  title: string
+  description?: string | null
+  kind?: MaterialKind
+  fileUrl: string
+  fileLabel?: string | null
+  streamId?: string | null
+  semester?: number | null
+  subjectId?: string | null
+  isPublished?: boolean
 }
 
 /** What the server reports about its upload capability. */

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -49,6 +49,9 @@ export default function ClassesScreen() {
 
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [query, setQuery] = useState('')
+  /** Empty means "every stream" / "every semester". */
+  const [stream, setStream] = useState('')
+  const [semester, setSemester] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -89,15 +92,49 @@ export default function ClassesScreen() {
     void load('refresh')
   }, [load])
 
+  /**
+   * The streams and semesters this teacher actually has classes in.
+   *
+   * Derived from their own subject list rather than fetched: offering a filter
+   * for a stream they do not teach would only ever return nothing.
+   */
+  const streams = useMemo(
+    () => [...new Set(subjects.map((subject) => subject.program))].sort(),
+    [subjects],
+  )
+
+  const semesters = useMemo(
+    () =>
+      [
+        ...new Set(
+          subjects
+            .filter((subject) => !stream || subject.program === stream)
+            .map((subject) => subject.semester),
+        ),
+      ].sort((a, b) => a - b),
+    [subjects, stream],
+  )
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    if (!needle) return subjects
-    return subjects.filter(
-      (subject) =>
+    return subjects.filter((subject) => {
+      if (stream && subject.program !== stream) return false
+      if (semester !== null && subject.semester !== semester) return false
+      if (!needle) return true
+      return (
         subject.code.toLowerCase().includes(needle) ||
-        subject.name.toLowerCase().includes(needle),
-    )
-  }, [subjects, query])
+        subject.name.toLowerCase().includes(needle)
+      )
+    })
+  }, [subjects, query, stream, semester])
+
+  const filtersActive = Boolean(query) || Boolean(stream) || semester !== null
+
+  const clearFilters = useCallback(() => {
+    setQuery('')
+    setStream('')
+    setSemester(null)
+  }, [])
 
   const goToAttendance = useCallback(
     (subject: Subject) => {
@@ -162,21 +199,58 @@ export default function ClassesScreen() {
         accessibilityLabel="Search classes"
       />
 
+      {streams.length > 1 ? (
+        <View style={styles.filterRow}>
+          <FilterChip label="All streams" active={!stream} onPress={() => setStream('')} />
+          {streams.map((name) => (
+            <FilterChip
+              key={name}
+              label={name}
+              active={stream === name}
+              onPress={() => {
+                setStream(name)
+                // The semester list is scoped to the stream, so a semester
+                // picked under the previous one may no longer exist.
+                setSemester(null)
+              }}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {semesters.length > 1 ? (
+        <View style={styles.filterRow}>
+          <FilterChip
+            label="All semesters"
+            active={semester === null}
+            onPress={() => setSemester(null)}
+          />
+          {semesters.map((number) => (
+            <FilterChip
+              key={number}
+              label={`Sem ${number}`}
+              active={semester === number}
+              onPress={() => setSemester(number)}
+            />
+          ))}
+        </View>
+      ) : null}
+
       <SectionTitle
         title={`${filtered.length} of ${subjects.length} ${
           subjects.length === 1 ? 'class' : 'classes'
         }`}
-        action={query ? 'Clear' : undefined}
-        onAction={query ? () => setQuery('') : undefined}
+        action={filtersActive ? 'Clear' : undefined}
+        onAction={filtersActive ? clearFilters : undefined}
       />
 
       {filtered.length === 0 ? (
         <EmptyState
           icon="search-outline"
           title="No matching class"
-          message={`Nothing matches “${query.trim()}”. Try the subject code instead.`}
-          actionLabel="Clear search"
-          onAction={() => setQuery('')}
+          message="No class matches these filters."
+          actionLabel="Clear filters"
+          onAction={clearFilters}
         />
       ) : (
         filtered.map((subject) => (
@@ -228,7 +302,61 @@ export default function ClassesScreen() {
   )
 }
 
+/** A one-tap filter toggle. Chips beat a dropdown here — there are only ever a
+ *  handful of streams, and a teacher marking attendance is in a hurry. */
+function FilterChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string
+  active: boolean
+  onPress: () => void
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      style={({ pressed }) => [
+        styles.filterChip,
+        active && styles.filterChipActive,
+        pressed && { opacity: 0.7 },
+      ]}
+    >
+      <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+        {label}
+      </Text>
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  filterChip: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  filterChipActive: {
+    backgroundColor: colors.brand,
+    borderColor: colors.brand,
+  },
+  filterChipText: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  filterChipTextActive: {
+    color: colors.textOnBrand,
+  },
   // Padding moves onto the body so the coloured rule can sit flush.
   card: { padding: 0, overflow: 'hidden' },
   cardRow: { flexDirection: 'row', alignItems: 'stretch' },

@@ -3,7 +3,17 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Loader2, LogOut, Image as ImageIcon, Megaphone, CalendarDays, Lock } from 'lucide-react'
+import {
+  BookOpen,
+  CalendarDays,
+  GraduationCap,
+  Image as ImageIcon,
+  Loader2,
+  Lock,
+  LogOut,
+  Megaphone,
+  Users,
+} from 'lucide-react'
 
 import type { User } from '@sfgc/shared'
 import { Button } from '@/components/ui/button'
@@ -13,6 +23,9 @@ import { cn } from '@/lib/utils'
 import { AdminLoginForm } from './login-form'
 
 const NAV = [
+  { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
+  { href: '/admin/students', label: 'Students', icon: Users },
+  { href: '/admin/library', label: 'Library', icon: BookOpen },
   { href: '/admin/notices', label: 'Notices', icon: Megaphone },
   { href: '/admin/events', label: 'Events', icon: CalendarDays },
   { href: '/admin/media', label: 'Pictures', icon: ImageIcon },

@@ -5,6 +5,7 @@ export type MainTabParamList = {
   Dashboard: undefined
   Attendance: undefined
   Progress: undefined
+  Library: undefined
   Events: undefined
   Notices: undefined
 }

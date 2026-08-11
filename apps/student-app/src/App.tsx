@@ -28,6 +28,7 @@ import LoginScreen from '@/screens/LoginScreen'
 import DashboardScreen from '@/screens/DashboardScreen'
 import AttendanceScreen from '@/screens/AttendanceScreen'
 import ProgressScreen from '@/screens/ProgressScreen'
+import LibraryScreen from '@/screens/LibraryScreen'
 import EventsScreen from '@/screens/EventsScreen'
 import EventDetailScreen from '@/screens/EventDetailScreen'
 import NoticesScreen from '@/screens/NoticesScreen'
@@ -56,6 +57,7 @@ const TAB_ICONS: Record<
   Dashboard: { active: 'home', inactive: 'home-outline' },
   Attendance: { active: 'calendar', inactive: 'calendar-outline' },
   Progress: { active: 'ribbon', inactive: 'ribbon-outline' },
+  Library: { active: 'library', inactive: 'library-outline' },
   Events: { active: 'sparkles', inactive: 'sparkles-outline' },
   Notices: { active: 'megaphone', inactive: 'megaphone-outline' },
 }
@@ -120,6 +122,7 @@ function MainTabs() {
         component={ProgressScreen}
         options={{ title: 'Progress Card' }}
       />
+      <Tabs.Screen name="Library" component={LibraryScreen} options={{ title: 'Library' }} />
       <Tabs.Screen name="Events" component={EventsScreen} options={{ title: 'Events' }} />
       <Tabs.Screen name="Notices" component={NoticesScreen} options={{ title: 'Notices' }} />
     </Tabs.Navigator>

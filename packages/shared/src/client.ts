@@ -27,6 +27,18 @@ import type {
   PublicStats,
   MediaConfig,
   UploadedMedia,
+  Stream,
+  StreamInput,
+  ClassGroup,
+  ClassGroupInput,
+  Period,
+  PeriodInput,
+  ManagedStudent,
+  CreateStudentInput,
+  UpdateStudentInput,
+  StudyMaterial,
+  StudyMaterialInput,
+  MaterialKind,
   RegisterInput,
   SaveProgressInput,
   StudentAttendance,
@@ -277,8 +289,10 @@ export class ApiClient {
 
     get: (id: string) => this.request<Subject>(`/subjects/${id}`),
 
-    roster: (id: string, date?: string) =>
-      this.request<SubjectRoster>(`/subjects/${id}/students`, { query: { date } }),
+    roster: (id: string, date?: string, periodNumber?: number) =>
+      this.request<SubjectRoster>(`/subjects/${id}/students`, {
+        query: { date, periodNumber },
+      }),
 
     create: (input: Partial<Subject> & { studentIds?: string[] }) =>
       this.request<Subject>('/subjects', { method: 'POST', body: input }),
@@ -375,6 +389,102 @@ export class ApiClient {
 
     remove: (id: string) =>
       this.request<{ id: string }>(`/notices/${id}`, { method: 'DELETE' }),
+  }
+
+  // ---------------------------------------------------------- academics ----
+
+  streams = {
+    list: () => this.request<Stream[]>('/streams'),
+
+    create: (input: StreamInput) =>
+      this.request<Stream>('/streams', { method: 'POST', body: input }),
+
+    update: (id: string, input: Partial<StreamInput>) =>
+      this.request<Stream>(`/streams/${id}`, { method: 'PATCH', body: input }),
+
+    remove: (id: string) =>
+      this.request<{ id: string }>(`/streams/${id}`, { method: 'DELETE' }),
+  }
+
+  classes = {
+    list: (query?: { streamId?: string; semester?: number; academicYear?: string }) =>
+      this.request<ClassGroup[]>('/classes', { query }),
+
+    create: (input: ClassGroupInput) =>
+      this.request<ClassGroup>('/classes', { method: 'POST', body: input }),
+
+    update: (
+      id: string,
+      input: Partial<Pick<ClassGroupInput, 'semester' | 'section' | 'academicYear'>>,
+    ) => this.request<ClassGroup>(`/classes/${id}`, { method: 'PATCH', body: input }),
+
+    remove: (id: string) =>
+      this.request<{ id: string }>(`/classes/${id}`, { method: 'DELETE' }),
+  }
+
+  periods = {
+    list: () => this.request<Period[]>('/periods'),
+
+    create: (input: PeriodInput) =>
+      this.request<Period>('/periods', { method: 'POST', body: input }),
+
+    update: (id: string, input: Partial<PeriodInput>) =>
+      this.request<Period>(`/periods/${id}`, { method: 'PATCH', body: input }),
+
+    remove: (id: string) =>
+      this.request<{ id: string; attendanceRecordsAffected: number }>(`/periods/${id}`, {
+        method: 'DELETE',
+      }),
+  }
+
+  students = {
+    list: (query?: {
+      classGroupId?: string
+      streamId?: string
+      semester?: number
+      section?: string
+      q?: string
+      page?: number
+      limit?: number
+    }) => this.paginated<ManagedStudent>('/students', { query }),
+
+    create: (input: CreateStudentInput) =>
+      this.request<ManagedStudent>('/students', { method: 'POST', body: input }),
+
+    update: (id: string, input: UpdateStudentInput) =>
+      this.request<ManagedStudent>(`/students/${id}`, { method: 'PATCH', body: input }),
+
+    remove: (id: string) =>
+      this.request<{ id: string; attendanceRecordsDeleted: number }>(`/students/${id}`, {
+        method: 'DELETE',
+      }),
+  }
+
+  // ---------------------------------------------------------- materials ----
+
+  materials = {
+    list: (query?: {
+      streamId?: string
+      semester?: number
+      subjectId?: string
+      kind?: MaterialKind
+      q?: string
+      includeUnpublished?: boolean
+      page?: number
+      limit?: number
+    }) => this.paginated<StudyMaterial>('/materials', { query }),
+
+    /** Scoped to the signed-in student's own stream and semester. */
+    mine: () => this.request<StudyMaterial[]>('/materials/mine'),
+
+    create: (input: StudyMaterialInput) =>
+      this.request<StudyMaterial>('/materials', { method: 'POST', body: input }),
+
+    update: (id: string, input: Partial<StudyMaterialInput>) =>
+      this.request<StudyMaterial>(`/materials/${id}`, { method: 'PATCH', body: input }),
+
+    remove: (id: string) =>
+      this.request<{ id: string }>(`/materials/${id}`, { method: 'DELETE' }),
   }
 
   // ------------------------------------------------------------ media ----

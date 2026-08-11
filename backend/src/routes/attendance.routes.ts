@@ -135,7 +135,12 @@ interface SubjectRef {
   name: string
 }
 
-const studentRefSelect = { id: true, name: true, registerNo: true } as const
+const studentRefSelect = {
+  id: true,
+  name: true,
+  registerNo: true,
+  studentCode: true,
+} as const
 const subjectRefSelect = { id: true, code: true, name: true } as const
 
 async function buildStudentAttendance(studentId: string, query: StudentAttendanceQuery) {
@@ -160,17 +165,27 @@ async function buildStudentAttendance(studentId: string, query: StudentAttendanc
     }),
     prisma.attendance.findMany({
       where,
-      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+      // Within a day, earliest period first — that is the order the classes
+      // actually happened in, which is how a student reads their own day.
+      orderBy: [{ date: 'desc' }, { periodNumber: 'asc' }],
       take: RECENT_RECORD_LIMIT,
       select: {
         id: true,
         date: true,
+        periodNumber: true,
         status: true,
         remarks: true,
         subject: { select: subjectRefSelect },
       },
     }),
   ])
+
+  // The whole timetable in one read, then matched in memory. Six rows joined
+  // onto every attendance record would be the same six rows over and over.
+  const periods = await prisma.period.findMany({
+    select: { number: true, label: true, startTime: true, endTime: true },
+  })
+  const periodByNumber = new Map(periods.map((period) => [period.number, period]))
 
   const overall = emptyTally()
   const tallyBySubject = new Map<string, AttendanceTally>()
@@ -199,16 +214,30 @@ async function buildStudentAttendance(studentId: string, query: StudentAttendanc
     .sort((a, b) => a.code.localeCompare(b.code))
 
   return {
-    student: { id: student.id, name: student.name, registerNo: student.registerNo },
+    student: {
+      id: student.id,
+      name: student.name,
+      registerNo: student.registerNo,
+      studentCode: student.studentCode,
+    },
     overall: summariseAttendance(overall),
     bySubject,
-    records: records.map((record) => ({
-      id: record.id,
-      date: formatCalendarDay(record.date),
-      status: record.status,
-      remarks: record.remarks,
-      subject: record.subject,
-    })),
+    records: records.map((record) => {
+      const period = periodByNumber.get(record.periodNumber)
+      return {
+        id: record.id,
+        date: formatCalendarDay(record.date),
+        periodNumber: record.periodNumber,
+        // Null when a period was deleted from the timetable after the fact.
+        // The number is still shown; only the clock times go missing.
+        periodLabel: period?.label ?? null,
+        startTime: period?.startTime ?? null,
+        endTime: period?.endTime ?? null,
+        status: record.status,
+        remarks: record.remarks,
+        subject: record.subject,
+      }
+    }),
   }
 }
 
@@ -268,16 +297,18 @@ router.post(
       body.records.map((record) =>
         prisma.attendance.upsert({
           where: {
-            studentId_subjectId_date: {
+            studentId_subjectId_date_periodNumber: {
               studentId: record.studentId,
               subjectId: subject.id,
               date,
+              periodNumber: body.periodNumber,
             },
           },
           create: {
             studentId: record.studentId,
             subjectId: subject.id,
             date,
+            periodNumber: body.periodNumber,
             status: record.status,
             remarks: record.remarks,
             markedById: user.id,
@@ -294,6 +325,7 @@ router.post(
     return ok(res, {
       marked: body.records.length,
       date: formatCalendarDay(date),
+      periodNumber: body.periodNumber,
       subjectId: subject.id,
     })
   }),
@@ -375,7 +407,16 @@ router.get(
         _count: { _all: true },
       }),
       prisma.attendance.findMany({
-        where: { subjectId: subject.id, date: focusDate },
+        where: {
+          subjectId: subject.id,
+          date: focusDate,
+          // Without this, a subject taught twice in one day would show
+          // whichever period happened to come back first as "today's" marks,
+          // and the teacher would overwrite the other hour without noticing.
+          ...(query.periodNumber === undefined
+            ? {}
+            : { periodNumber: query.periodNumber }),
+        },
         select: { studentId: true, status: true },
       }),
     ])

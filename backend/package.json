@@ -15,7 +15,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:backfill": "tsx prisma/backfill-classes.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

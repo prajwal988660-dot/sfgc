@@ -192,7 +192,12 @@ export default function AttendanceScreen({ navigation }: Props) {
     }
     return Array.from(byDate.entries())
       .sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
-      .map(([title, items]) => ({ title, data: items }))
+      .map(([title, items]) => ({
+        title,
+        // Earliest hour first — a student reads their day in the order it
+        // happened, not in whatever order the rows came back.
+        data: [...items].sort((a, b) => a.periodNumber - b.periodNumber),
+      }))
   }, [data])
 
   if (!data) {
@@ -321,6 +326,14 @@ export default function AttendanceScreen({ navigation }: Props) {
               <Text style={styles.recordCode}>{item.subject.code}</Text>
               <Text style={styles.recordName} numberOfLines={1}>
                 {item.subject.name}
+              </Text>
+              <Text style={styles.recordPeriod} numberOfLines={1}>
+                {/* The times are absent only when the period was later removed
+                    from the timetable; the hour itself is still meaningful. */}
+                {`Period ${item.periodNumber}`}
+                {item.startTime && item.endTime
+                  ? ` · ${item.startTime}–${item.endTime}`
+                  : ''}
               </Text>
               {item.remarks ? (
                 <Text style={styles.recordRemarks} numberOfLines={2}>
@@ -492,6 +505,7 @@ const styles = StyleSheet.create({
   recordText: { flex: 1, gap: 1 },
   recordCode: { ...typography.bodyStrong, color: colors.text },
   recordName: { ...typography.caption, color: colors.textMuted },
+  recordPeriod: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
   recordRemarks: { ...typography.caption, color: colors.textFaint, fontStyle: 'italic' },
   rowPill: { alignSelf: 'center' },
 

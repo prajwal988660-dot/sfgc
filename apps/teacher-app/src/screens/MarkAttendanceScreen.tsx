@@ -19,6 +19,7 @@ import type { RootStackParamList } from '@/navigation/types'
 import type {
   AttendanceStatus,
   MarkAttendanceInput,
+  Period,
   RosterStudent,
   SubjectRoster,
 } from '@sfgc/shared'
@@ -56,6 +57,9 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
   const { subjectId, subjectName, subjectCode } = route.params
 
   const [date, setDate] = useState<Date>(startOfToday)
+  /** The college timetable, so the teacher picks an hour rather than typing one. */
+  const [periods, setPeriods] = useState<Period[]>([])
+  const [periodNumber, setPeriodNumber] = useState(1)
   const [roster, setRoster] = useState<SubjectRoster | null>(null)
   /** The server's view of the day — the baseline the local edits are diffed against. */
   const [seed, setSeed] = useState<StatusMap>({})
@@ -87,11 +91,42 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     }
   }, [])
 
+  // The timetable rarely changes, so it is fetched once for the screen rather
+  // than alongside every roster reload.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const list = await api.periods.list()
+        if (cancelled) return
+        const active = list.filter((period) => period.isActive)
+        setPeriods(active)
+        // Default to the hour the college is actually in right now, so the
+        // common case needs no interaction at all.
+        const now = new Date()
+        const clock = `${String(now.getHours()).padStart(2, '0')}:${String(
+          now.getMinutes(),
+        ).padStart(2, '0')}`
+        const current = active.find(
+          (period) => clock >= period.startTime && clock <= period.endTime,
+        )
+        if (current) setPeriodNumber(current.number)
+      } catch {
+        // A missing timetable is not fatal: marking falls back to period 1,
+        // exactly as it behaved before periods existed.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // ------------------------------------------------------------------ load --
 
   const loadRoster = useCallback(
     async (
       key: string,
+      period: number,
       mode: 'initial' | 'refresh',
       isActive: () => boolean = () => true,
     ) => {
@@ -106,7 +141,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
       }
 
       try {
-        const data = await api.subjects.roster(subjectId, key)
+        const data = await api.subjects.roster(subjectId, key, period)
         if (stale()) return
 
         const fresh = seedFrom(data.students)
@@ -133,15 +168,15 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    void loadRoster(dateKey, 'initial', () => !cancelled)
+    void loadRoster(dateKey, periodNumber, 'initial', () => !cancelled)
     return () => {
       cancelled = true
     }
-  }, [dateKey, loadRoster])
+  }, [dateKey, periodNumber, loadRoster])
 
   const handleRefresh = useCallback(() => {
-    void loadRoster(dateKey, 'refresh')
-  }, [dateKey, loadRoster])
+    void loadRoster(dateKey, periodNumber, 'refresh')
+  }, [dateKey, periodNumber, loadRoster])
 
   // --------------------------------------------------------------- derived --
 
@@ -263,7 +298,12 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      const result = await api.attendance.mark({ subjectId, date: dateKey, records })
+      const result = await api.attendance.mark({
+        subjectId,
+        date: dateKey,
+        periodNumber,
+        records,
+      })
       if (unmountedRef.current) return
 
       // Baseline the saved state so the unsaved-changes guard stays quiet.
@@ -290,7 +330,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     } finally {
       if (!unmountedRef.current) setSubmitting(false)
     }
-  }, [submitting, students, statuses, subjectId, dateKey, date, navigation])
+  }, [submitting, students, statuses, subjectId, dateKey, periodNumber, date, navigation])
 
   // Unsaved marks must survive a stray back-swipe.
   useEffect(() => {
@@ -385,6 +425,38 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 
       {dateBar}
 
+      {periods.length > 0 ? (
+        <View style={styles.periodBar}>
+          <Text style={styles.periodLabel}>Period</Text>
+          <View style={styles.periodChips}>
+            {periods.map((period) => {
+              const active = period.number === periodNumber
+              return (
+                <Pressable
+                  key={period.id}
+                  onPress={() => setPeriodNumber(period.number)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`Period ${period.number}, ${period.startTime} to ${period.endTime}`}
+                  style={({ pressed }) => [
+                    styles.periodChip,
+                    active && styles.periodChipActive,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={[styles.periodChipText, active && styles.periodChipTextActive]}>
+                    P{period.number}
+                  </Text>
+                  <Text style={[styles.periodChipTime, active && styles.periodChipTextActive]}>
+                    {period.startTime}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+      ) : null}
+
       {alreadyMarked ? (
         <View style={styles.banner}>
           <Ionicons name="information-circle" size={18} color={colors.info} />
@@ -441,7 +513,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     body = (
       <View style={styles.stateWrap}>
         {dateBar}
-        <ErrorState message={loadError} onRetry={() => void loadRoster(dateKey, 'initial')} />
+        <ErrorState message={loadError} onRetry={() => void loadRoster(dateKey, periodNumber, 'initial')} />
       </View>
     )
   } else if (students.length === 0) {
@@ -453,7 +525,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
           title="No students enrolled"
           message={`Nobody is enrolled in ${subjectCode} yet. Ask the office to enrol students before marking attendance.`}
           actionLabel="Reload"
-          onAction={() => void loadRoster(dateKey, 'initial')}
+          onAction={() => void loadRoster(dateKey, periodNumber, 'initial')}
         />
       </View>
     )
@@ -666,6 +738,45 @@ const styles = StyleSheet.create({
   dateSub: { ...typography.caption, color: colors.textMuted },
   todayButton: { height: 44, paddingHorizontal: spacing.md },
 
+  periodBar: {
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  periodLabel: {
+    ...typography.tiny,
+    color: colors.textFaint,
+    textTransform: 'uppercase',
+  },
+  periodChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  periodChip: {
+    minWidth: 58,
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  periodChipActive: {
+    backgroundColor: colors.brand,
+    borderColor: colors.brand,
+  },
+  periodChipText: {
+    ...typography.bodyStrong,
+    color: colors.text,
+  },
+  periodChipTime: {
+    ...typography.caption,
+    color: colors.textFaint,
+  },
+  periodChipTextActive: {
+    color: colors.textOnBrand,
+  },
   banner: {
     flexDirection: 'row',
     alignItems: 'center',

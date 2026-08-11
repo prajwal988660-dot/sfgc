@@ -49,6 +49,12 @@ export const listSubjectsQuerySchema = z.object({
 
 export const rosterQuerySchema = z.object({
   date: dateKey.optional(),
+  /**
+   * Which hour the roster is for. Omitted means period 1, matching what
+   * `POST /attendance/mark` defaults to — so an unqualified roster keeps
+   * describing exactly the row that a plain mark would write.
+   */
+  periodNumber: z.coerce.number().int().min(1).max(12).optional(),
 })
 
 export const createSubjectSchema = z.object({

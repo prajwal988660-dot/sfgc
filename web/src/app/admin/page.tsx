@@ -1,11 +1,38 @@
 'use client'
 
 import Link from 'next/link'
-import { CalendarDays, Image as ImageIcon, Megaphone } from 'lucide-react'
+import {
+  BookOpen,
+  CalendarDays,
+  GraduationCap,
+  Image as ImageIcon,
+  Megaphone,
+  Users,
+} from 'lucide-react'
 
 import { AdminGuard } from '@/components/admin/admin-guard'
 
 const CARDS = [
+  {
+    href: '/admin/classes',
+    icon: GraduationCap,
+    title: 'Classes',
+    blurb:
+      'Create streams, the semesters and sections inside them, and the daily period timetable.',
+  },
+  {
+    href: '/admin/students',
+    icon: Users,
+    title: 'Students',
+    blurb:
+      'Add students into a class and get their ID automatically. Search, review and remove.',
+  },
+  {
+    href: '/admin/library',
+    icon: BookOpen,
+    title: 'Library',
+    blurb: 'Notes, question papers and solved papers for the student app.',
+  },
   {
     href: '/admin/notices',
     icon: Megaphone,

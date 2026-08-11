@@ -43,6 +43,17 @@ enum RegistrationStatus {
   CANCELLED
 }
 
+/// What a piece of study material actually is. Students filter the library by
+/// this, because "last year's question paper" and "the unit 3 notes" are
+/// looked for in completely different situations.
+enum MaterialKind {
+  NOTES
+  QUESTION_PAPER
+  SOLVED_PAPER
+  SYLLABUS
+  REFERENCE
+}
+
 // ----------------------------------------------------------------- user ----
 
 /// A single account table for all three roles. Role-specific columns are
@@ -62,12 +73,25 @@ model User {
   // --- student fields ---
   /// College register number, e.g. "SFGC101". Unique when present.
   registerNo String? @unique
+  /// Stream-scoped student ID, e.g. "BCA26001" — stream code, two-digit
+  /// admission year, then a serial that restarts per stream. This is what
+  /// attendance and the apps display. `registerNo` is kept alongside it so
+  /// anything already recorded against the old numbering still resolves.
+  studentCode String? @unique
   program    String? // "BCA", "B.Com", "MBA" ...
   semester   Int?
   section    String? // "A", "B" ...
   admissionYear Int?
   guardianName  String?
   guardianPhone String?
+
+  /// Set for students once an admin files them into a class. Nullable because
+  /// the 40 seeded students predate class groups, and because teachers and
+  /// admins have neither.
+  streamId     String?
+  classGroupId String?
+  stream       Stream?     @relation("StudentStream", fields: [streamId], references: [id], onDelete: SetNull)
+  classGroup   ClassGroup? @relation("StudentClassGroup", fields: [classGroupId], references: [id], onDelete: SetNull)
 
   // --- teacher fields ---
   employeeId  String? @unique
@@ -91,10 +115,122 @@ model User {
   eventsCreated      Event[]             @relation("EventCreatedBy")
   eventRegistrations EventRegistration[] @relation("UserRegistrations")
   noticesAuthored    Notice[]            @relation("NoticeAuthor")
+  materialsUploaded  StudyMaterial[]     @relation("MaterialUploadedBy")
 
   @@index([role])
   @@index([program, semester, section])
+  @@index([classGroupId])
+  @@index([streamId])
   @@map("users")
+}
+
+// --------------------------------------------------------------- stream ----
+
+/// A programme of study — BCA, B.Com, BBA. Previously this lived only as a
+/// free-text `program` string on User and Subject, which meant "B.Com",
+/// "BCom" and "b.com" were three different classes. Making it a row gives the
+/// admin something to create and delete, and gives student IDs a stable prefix.
+model Stream {
+  id   String @id @default(cuid())
+  /// Uppercase, no punctuation — used as the student ID prefix, so "BCOM"
+  /// rather than "B.Com".
+  code String @unique
+  name String
+  /// The display form, e.g. "B.Com". `code` stays machine-friendly.
+  shortName  String?
+  department String?
+  durationSemesters Int     @default(6)
+  isActive          Boolean @default(true)
+
+  classGroups ClassGroup[]
+  students    User[]          @relation("StudentStream")
+  materials   StudyMaterial[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("streams")
+}
+
+/// One teachable class: a stream, a semester and a section, for one academic
+/// year. This is the thing an admin creates and then fills with students, and
+/// the thing a teacher picks before marking attendance.
+model ClassGroup {
+  id           String @id @default(cuid())
+  streamId     String
+  semester     Int
+  section      String
+  academicYear String @default("2026-27")
+
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  students User[] @relation("StudentClassGroup")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// The same section cannot exist twice in one stream, semester and year.
+  @@unique([streamId, semester, section, academicYear])
+  @@index([streamId, semester])
+  @@map("class_groups")
+}
+
+// --------------------------------------------------------------- period ----
+
+/// A slot in the college's daily timetable. Defined once by the admin so a
+/// teacher picks "Period 3" and the times come along with it, rather than
+/// retyping 11:15 every day and eventually typing 11:51.
+model Period {
+  id     String @id @default(cuid())
+  /// 1, 2, 3 … Attendance stores this number rather than the row id.
+  number Int    @unique
+  label  String?
+  /// "HH:mm", 24-hour. Times of day with no date attached, so a string beats
+  /// a DateTime whose date component would be meaningless and misleading.
+  startTime String
+  endTime   String
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("periods")
+}
+
+// -------------------------------------------------------------- library ----
+
+/// Notes, question papers and solved papers, shown in the student app's
+/// library. Files live wherever `fileUrl` points — the admin panel uploads
+/// them to Supabase Storage through /api/media/upload.
+model StudyMaterial {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  kind        MaterialKind @default(NOTES)
+  fileUrl     String
+  /// Shown next to the download link, e.g. "PDF · 2.4 MB".
+  fileLabel   String?
+
+  /// Scope. All three are optional: a material can target one subject, or a
+  /// whole semester of a stream, or the entire college.
+  streamId  String?
+  semester  Int?
+  subjectId String?
+
+  isPublished Boolean @default(true)
+
+  uploadedById String?
+
+  stream     Stream?  @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  subject    Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  uploadedBy User?    @relation("MaterialUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([streamId, semester])
+  @@index([subjectId])
+  @@index([kind])
+  @@map("study_materials")
 }
 
 // -------------------------------------------------------------- subject ----
@@ -122,6 +258,7 @@ model Subject {
 
   attendance    Attendance[]
   progressCards ProgressCard[]
+  materials     StudyMaterial[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -133,15 +270,23 @@ model Subject {
 
 // ----------------------------------------------------------- attendance ----
 
-/// One row per student, per subject, per calendar day. The composite unique
-/// key makes re-marking a day an idempotent upsert instead of a duplicate.
+/// One row per student, per subject, per period, per calendar day. The
+/// composite unique key makes re-marking idempotent instead of duplicating.
+///
+/// `periodNumber` is the period's number rather than a foreign key, and it is
+/// non-null with a default. A nullable FK in the unique key would defeat it
+/// entirely: Postgres treats NULLs as distinct, so every unmarked-period row
+/// would count as unique and the same student could be marked twice for the
+/// same hour. Defaulting to 1 also lets the rows that predate periods keep
+/// working untouched.
 model Attendance {
-  id        String           @id @default(cuid())
-  studentId String
-  subjectId String
-  date      DateTime         @db.Date
-  status    AttendanceStatus
-  remarks   String?
+  id           String           @id @default(cuid())
+  studentId    String
+  subjectId    String
+  date         DateTime         @db.Date
+  periodNumber Int              @default(1)
+  status       AttendanceStatus
+  remarks      String?
 
   markedById String
   markedBy   User   @relation("AttendanceMarkedBy", fields: [markedById], references: [id])
@@ -152,7 +297,7 @@ model Attendance {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, subjectId, date])
+  @@unique([studentId, subjectId, date, periodNumber])
   @@index([subjectId, date])
   @@index([studentId])
   @@map("attendance")
