@@ -1,14 +1,14 @@
 {
   "student": {
-    "url": "https://github.com/prajwal988660-dot/sfgc/releases/download/student-v1.1.0/sfgc-student.apk",
-    "version": "1.1.0",
-    "size": 45815416,
-    "published": "2026-08-11T16:57:08.311Z"
+    "url": "https://github.com/prajwal988660-dot/sfgc/releases/download/student-v1.2.0/sfgc-student.apk",
+    "version": "1.2.0",
+    "size": 45815428,
+    "published": "2026-08-14T16:14:43.915Z"
   },
   "teacher": {
-    "url": "https://github.com/prajwal988660-dot/sfgc/releases/download/teacher-v1.1.0/sfgc-teacher.apk",
-    "version": "1.1.0",
-    "size": 45697532,
-    "published": "2026-08-11T17:01:17.113Z"
+    "url": "https://github.com/prajwal988660-dot/sfgc/releases/download/teacher-v1.2.0/sfgc-teacher.apk",
+    "version": "1.2.0",
+    "size": 45697540,
+    "published": "2026-08-14T16:21:31.348Z"
   }
 }
