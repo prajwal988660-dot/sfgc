@@ -45,14 +45,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => setUnauthorizedHandler(null)
   }, [signOut])
 
-  // Restore the session on launch: show the cached user immediately so the app
-  // does not flash the login screen, then confirm it against the server.
+  // Restore the session on launch.
+  //
+  // A cached user ends the loading state straight away, and the server check
+  // then runs in the background. Waiting for that request before showing
+  // anything meant the app sat on a spinner for as long as the API took to
+  // answer — and on a free-tier host that has gone to sleep, waking up takes
+  // longer than the request timeout, so the app reliably gave up and dropped
+  // the student back at the login screen.
+  //
+  // Only a launch with no cached user still waits, because until the server
+  // answers there is genuinely nothing to show.
   useEffect(() => {
     let cancelled = false
 
     const restore = async () => {
       const cached = await readJson<User>(StorageKeys.USER)
-      if (!cancelled && cached) setUser(cached)
+      if (!cancelled && cached) {
+        setUser(cached)
+        setInitialising(false)
+      }
 
       try {
         const fresh = await api.auth.me()

@@ -27,7 +27,11 @@ export const api = new ApiClient({
   baseUrl: API_URL,
   getToken,
   onUnauthorized: () => onUnauthorized?.(),
-  timeoutMs: 20_000,
+  // 60s, not 20s. The API is hosted on a free tier that sleeps after a spell
+  // of inactivity, and waking it up has been measured at ~38 seconds. A 20s
+  // timeout gave up before the server had finished booting, so the first
+  // request after a quiet period failed every time.
+  timeoutMs: 60_000,
 })
 
 export { ApiError }
