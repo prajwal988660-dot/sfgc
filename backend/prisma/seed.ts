@@ -824,6 +824,15 @@ async function seedUsers(): Promise<{
   // every run quietly reset the live administrator back to a credential anyone
   // could look up. Refusing here is the last point at which that is catchable.
   const adminPassword = env.SEED_ADMIN_PASSWORD
+  if (adminPassword && adminPassword.length < 12) {
+    throw new Error(
+      `SEED_ADMIN_PASSWORD is ${adminPassword.length} characters. Use at least 12.\n\n` +
+        'This guards the administrator account, which can post as the college and\n' +
+        'delete student records. Checked here rather than at API startup, so that a\n' +
+        'short value left in a .env cannot stop the server booting over a variable it\n' +
+        'never reads.',
+    )
+  }
   if (!adminPassword) {
     throw new Error(
       'SEED_ADMIN_PASSWORD is not set.\n\n' +

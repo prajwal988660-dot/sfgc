@@ -20,16 +20,20 @@ const schema = z.object({
 
   SEED_ADMIN_EMAIL: z.string().email().default('admin@sfgc.ac.in'),
   /**
-   * Deliberately has no default and is deliberately optional.
+   * No default, and validated nowhere here — deliberately, on both counts.
    *
    * No default, because the previous one ("Admin@123") is published in this
-   * repository — anyone could read it and sign in to the admin panel. Optional,
-   * because only the seed script consumes it: making it required would mean a
-   * running production API refusing to boot over a value it never reads, which
-   * trades a credential problem for an outage. `prisma/seed.ts` enforces it
-   * instead, at the one moment it actually matters.
+   * repository; anyone could read it and sign in to the admin panel.
+   *
+   * No constraints, because only `prisma/seed.ts` reads this. An earlier
+   * attempt put `.min(12)` here and immediately proved the point: a machine
+   * with the old nine-character value still in its .env could no longer start
+   * the API at all, over a variable the API never touches. A rule that can
+   * refuse boot must be about something the server actually needs. The length
+   * requirement lives in the seed, which is the only code that consumes this
+   * and the only place the answer matters.
    */
-  SEED_ADMIN_PASSWORD: z.string().min(12).optional(),
+  SEED_ADMIN_PASSWORD: z.string().optional(),
 
   // Image uploads for the admin panel. Optional on purpose: the API must boot
   // and serve everything else on an install where storage was never set up,
