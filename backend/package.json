@@ -16,7 +16,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "db:backfill": "tsx prisma/backfill-classes.ts"
+    "db:backfill": "tsx prisma/backfill-classes.ts",
+    "user:password": "tsx scripts/set-password.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

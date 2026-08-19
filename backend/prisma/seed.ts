@@ -817,10 +817,28 @@ async function seedUsers(): Promise<{
     ...STUDENTS.map((student) => student.email),
   ])
 
+  // The admin password has no default and must be supplied deliberately.
+  //
+  // This seed upserts the admin account, so running it silently rewrites that
+  // password. When the value came from a default published in this repository,
+  // every run quietly reset the live administrator back to a credential anyone
+  // could look up. Refusing here is the last point at which that is catchable.
+  const adminPassword = env.SEED_ADMIN_PASSWORD
+  if (!adminPassword) {
+    throw new Error(
+      'SEED_ADMIN_PASSWORD is not set.\n\n' +
+        'The seed upserts the administrator account, so it needs a password to set.\n' +
+        'Choose one (12+ characters) and pass it for this run only:\n\n' +
+        '  SEED_ADMIN_PASSWORD="<your password>" npm run db:seed --workspace backend\n\n' +
+        'To change the password without re-seeding everything, use:\n' +
+        '  npm run user:password --workspace backend',
+    )
+  }
+
   // One bcrypt round per distinct demo password rather than per account —
   // hashing 47 times costs several seconds for no benefit in sample data.
   const [adminHash, teacherHash, studentHash] = await Promise.all([
-    hashPassword(env.SEED_ADMIN_PASSWORD),
+    hashPassword(adminPassword),
     hashPassword(TEACHER_PASSWORD),
     hashPassword(STUDENT_PASSWORD),
   ])
@@ -1274,7 +1292,9 @@ async function printSummary(): Promise<void> {
     renderTable(
       ['Role', 'Identifier', 'Also accepts', 'Password'],
       [
-        ['ADMIN', env.SEED_ADMIN_EMAIL, '—', env.SEED_ADMIN_PASSWORD],
+        // Never echoed back. The operator supplied it moments ago and knows it;
+        // printing it only risks it living on in a terminal scrollback or a CI log.
+        ['ADMIN', env.SEED_ADMIN_EMAIL, '—', '(the one you supplied)'],
         ['TEACHER', firstTeacher.email, firstTeacher.employeeId, TEACHER_PASSWORD],
         ['STUDENT', firstStudent.email, firstStudent.registerNo, STUDENT_PASSWORD],
       ],
