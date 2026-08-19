@@ -3,6 +3,7 @@
 import * as React from 'react'
 
 import type { User } from '@sfgc/shared'
+import { isStaffRole } from '@sfgc/shared'
 import { browserApi, TOKEN_STORAGE_KEY } from '@/lib/api'
 
 /**
@@ -20,11 +21,8 @@ import { browserApi, TOKEN_STORAGE_KEY } from '@/lib/api'
 
 const USER_STORAGE_KEY = 'sfgc.admin.user'
 
-/** Roles the API will accept for the write endpoints the panel calls. */
-const STAFF_ROLES: readonly User['role'][] = ['ADMIN', 'TEACHER']
-
 export function isStaff(user: User | null): boolean {
-  return Boolean(user && STAFF_ROLES.includes(user.role))
+  return Boolean(user && isStaffRole(user.role))
 }
 
 export function readStoredUser(): User | null {

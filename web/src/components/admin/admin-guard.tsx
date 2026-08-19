@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 
 import type { User } from '@sfgc/shared'
+import { roleLabel } from '@sfgc/shared'
 import { Button } from '@/components/ui/button'
 import { useAdminSession } from '@/lib/admin-session'
 import { cn } from '@/lib/utils'
@@ -98,7 +99,7 @@ function AdminNav({ user, onSignOut }: { user: User; onSignOut: () => void }) {
 
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden text-sm text-muted-foreground sm:inline">
-            {user.name} · {user.role === 'ADMIN' ? 'Admin' : 'Teacher'}
+            {user.name} · {roleLabel(user.role)}
           </span>
           <Button variant="outline" size="sm" onClick={onSignOut}>
             <LogOut className="h-4 w-4" aria-hidden="true" />

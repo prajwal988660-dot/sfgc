@@ -49,7 +49,22 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiFailure
 
 // --------------------------------------------------------------- domain ----
 
-export type Role = 'ADMIN' | 'TEACHER' | 'STUDENT'
+/**
+ * Mirrors the Role enum in backend/prisma/schema.prisma.
+ *
+ * ADMIN is deprecated and kept only while the live administrator account is
+ * moved to SUPER_ADMIN. Clients must accept both until that has happened and
+ * every build is deployed — a client that recognises only one of the two names
+ * locks the administrator out at whichever moment the other one is in force.
+ */
+export type Role =
+  | 'STUDENT'
+  | 'TEACHER'
+  | 'CONTENT_ADMIN'
+  | 'ADMISSIONS_OFFICER'
+  | 'SUPER_ADMIN'
+  /** @deprecated use SUPER_ADMIN */
+  | 'ADMIN'
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED'
 export type NoticeAudience = 'ALL' | 'STUDENTS' | 'TEACHERS'
 export type RegistrationStatus = 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED'

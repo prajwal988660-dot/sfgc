@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react'
 import type { User } from '@sfgc/shared'
+import { canUseTeacherApp } from '@sfgc/shared'
 
 import { api, errorMessage, setUnauthorizedHandler } from '@/lib/api'
 import { clearSession, readJson, setToken, StorageKeys, writeJson } from '@/lib/storage'
@@ -69,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const fresh = await api.auth.me()
         if (cancelled) return
-        if (fresh.role !== 'TEACHER' && fresh.role !== 'ADMIN') {
+        if (!canUseTeacherApp(fresh.role)) {
           await clearSession()
           setUser(null)
         } else {
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // This app is for staff only. A student's credentials are valid against
       // the API but must not open the attendance tools.
-      if (signedIn.role !== 'TEACHER' && signedIn.role !== 'ADMIN') {
+      if (!canUseTeacherApp(signedIn.role)) {
         setError('This app is for teaching staff. Please use the SFGC Student app.')
         return false
       }

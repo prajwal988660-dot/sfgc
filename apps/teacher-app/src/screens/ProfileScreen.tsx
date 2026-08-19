@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons'
 import Constants from 'expo-constants'
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
 
+import { roleLabel } from '@sfgc/shared'
+
 import {
   AppButton,
   Avatar,
@@ -119,7 +121,7 @@ export default function ProfileScreen({ navigation }: Props) {
     )
   }
 
-  const roleLabel = user.role === 'ADMIN' ? 'Administrator' : 'Teacher'
+  const roleText = roleLabel(user.role)
 
   return (
     <Screen refreshing={refreshing} onRefresh={onRefresh}>
@@ -134,8 +136,8 @@ export default function ProfileScreen({ navigation }: Props) {
               {user.designation ?? 'Faculty'}
             </Text>
             <Pill
-              label={roleLabel}
-              tone={user.role === 'ADMIN' ? 'gold' : 'brand'}
+              label={roleText}
+              tone={user.role === 'TEACHER' ? 'brand' : 'gold'}
               style={styles.rolePill}
             />
           </View>
