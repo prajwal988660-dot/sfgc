@@ -1,5 +1,5 @@
 import { Expo } from 'expo-server-sdk'
-import { Prisma, type NoticeAudience } from '@prisma/client'
+import { Prisma, type NoticeAudience, type Role } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 
 /** How much of the notice body rides along in the notification. */
@@ -68,6 +68,20 @@ export function excerpt(input: string, max: number = EXCERPT_LENGTH): string {
 }
 
 /**
+ * Roles that receive a notice addressed to staff.
+ *
+ * Named once rather than written inline, because inline is exactly what broke:
+ * this file said `role: 'ADMIN'` and went on saying it after the
+ * administrator's row moved to SUPER_ADMIN. The match silently became zero
+ * users, and the college's administrator stopped receiving every push
+ * notification. Nothing errored; the notices simply stopped arriving, which is
+ * the hardest kind of failure to notice.
+ *
+ * ADMIN stays only until the deprecated value leaves the enum.
+ */
+const ADMIN_ROLES: Role[] = ['SUPER_ADMIN', 'ADMIN']
+
+/**
  * Who should be woken up for this notice. Mirrors the visibility rules of
  * `GET /notices`: admins see everything, teachers see ALL/TEACHERS, students
  * see ALL/STUDENTS narrowed by the notice's program and semester when set.
@@ -83,13 +97,16 @@ function recipientWhere(notice: NoticePushPayload): Prisma.UserWhereInput {
   let audience: Prisma.UserWhereInput
   switch (notice.audience) {
     case 'STUDENTS':
-      audience = { OR: [{ role: 'ADMIN' }, students] }
+      // Administrators too, so they see what was sent to students.
+      audience = { OR: [{ role: { in: ADMIN_ROLES } }, students] }
       break
     case 'TEACHERS':
-      audience = { role: { in: ['ADMIN', 'TEACHER'] } }
+      audience = { role: { in: [...ADMIN_ROLES, 'TEACHER'] } }
       break
     default:
-      audience = { OR: [{ role: { in: ['ADMIN', 'TEACHER'] } }, students] }
+      // ALL means all. Listing roles here is what broke it before: every role
+      // added later is silently excluded from a notice addressed to everyone.
+      audience = {}
   }
 
   return {

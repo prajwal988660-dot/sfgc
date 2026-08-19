@@ -5,6 +5,7 @@ import Constants from 'expo-constants'
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
 
 import { roleLabel } from '@sfgc/shared'
+import { registerForPushNotifications } from '@/lib/notifications'
 
 import {
   AppButton,
@@ -85,6 +86,36 @@ export default function ProfileScreen({ navigation }: Props) {
       if (mountedRef.current) setRefreshing(false)
     }
   }, [loadSubjectCount, refresh])
+
+  const [enablingPush, setEnablingPush] = useState(false)
+
+  /**
+   * Re-registers this device for push.
+   *
+   * Registration already runs on sign-in, so this is for the teacher who
+   * declined the permission prompt then changed their mind — without it their
+   * only route back is reinstalling the app.
+   */
+  const handleEnablePush = useCallback(async () => {
+    setEnablingPush(true)
+    // Never throws — returns null whenever push is unavailable.
+    const token = await registerForPushNotifications()
+    setEnablingPush(false)
+
+    if (token) {
+      Alert.alert(
+        'Notifications are on',
+        'This device is registered. Notices addressed to teaching staff will arrive as push notifications.',
+      )
+    } else {
+      Alert.alert(
+        'Notifications are off',
+        'This device could not be registered. Allow notifications for SFGC Teacher in your ' +
+          'phone settings, then try again. Push notifications also need a real device — they ' +
+          'do not work on a simulator.',
+      )
+    }
+  }, [])
 
   const confirmSignOut = useCallback(() => {
     Alert.alert(
@@ -225,6 +256,15 @@ export default function ProfileScreen({ navigation }: Props) {
           </View>
         </Card>
       </View>
+
+      <AppButton
+        label="Enable notifications"
+        onPress={() => void handleEnablePush()}
+        variant="secondary"
+        icon="notifications-outline"
+        loading={enablingPush}
+        style={styles.signOut}
+      />
 
       <AppButton
         label="Sign out"

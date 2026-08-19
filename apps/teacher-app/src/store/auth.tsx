@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 import type { User } from '@sfgc/shared'
 import { canUseTeacherApp } from '@sfgc/shared'
+import { registerForPushNotifications } from '@/lib/notifications'
 
 import { api, errorMessage, setUnauthorizedHandler } from '@/lib/api'
 import { clearSession, readJson, setToken, StorageKeys, writeJson } from '@/lib/storage'
@@ -76,6 +77,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUser(fresh)
           await writeJson(StorageKeys.USER, fresh)
+          // Not awaited: a teacher who declines the prompt, or has no network,
+          // must still reach the app. The token is re-registered on every
+          // launch, which is also how a reinstalled app replaces a dead one.
+          void registerForPushNotifications()
         }
       } catch {
         // No token, expired token, or the server is unreachable. If we have no
@@ -110,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await setToken(token)
       await writeJson(StorageKeys.USER, signedIn)
+      void registerForPushNotifications()
       setUser(signedIn)
       return true
     } catch (err) {

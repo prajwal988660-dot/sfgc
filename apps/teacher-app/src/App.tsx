@@ -1,16 +1,23 @@
 import 'react-native-gesture-handler'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native'
+import {
+  NavigationContainer,
+  DefaultTheme,
+  useNavigationContainerRef,
+  type Theme,
+} from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import * as Notifications from 'expo-notifications'
 
 import { AuthProvider, useAuth } from '@/store/auth'
 import { colors, typography } from '@/theme'
+import { readNoticeData } from '@/lib/notifications'
 import type { MainTabParamList, RootStackParamList } from '@/navigation/types'
 
 import LoginScreen from '@/screens/LoginScreen'
@@ -93,6 +100,63 @@ function MainTabs() {
   )
 }
 
+/**
+ * Opens the notice a teacher tapped in a push notification.
+ *
+ * A cold start resolves the tapped notification long before the stored session
+ * has been checked against the server, and `NoticeDetail` only exists inside the
+ * signed-in stack. So the id is queued and consumed once the session has settled
+ * and a navigator is mounted — a fixed delay would fire into an empty container
+ * and drop the link silently.
+ */
+function useNoticeDeepLinks(
+  navigationRef: ReturnType<typeof useNavigationContainerRef<RootStackParamList>>,
+) {
+  const { user, initialising } = useAuth()
+  const [pendingNoticeId, setPendingNoticeId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    const queue = (noticeId?: string) => {
+      if (noticeId && active) setPendingNoticeId(noticeId)
+    }
+
+    // Expo Go on Android no longer ships remote-push support, so every call
+    // here can reject or throw. Deep-linking is a convenience — losing it must
+    // never take the app down, so nothing in this block is allowed to escape.
+    let subscription: { remove: () => void } | null = null
+
+    try {
+      // Cold start: the app was launched by tapping a notification.
+      Notifications.getLastNotificationResponseAsync()
+        .then((response) => {
+          if (response) queue(readNoticeData(response).noticeId)
+        })
+        .catch(() => {
+          // No notification permission, or unsupported in this client.
+        })
+
+      subscription = Notifications.addNotificationResponseReceivedListener(
+        (response) => queue(readNoticeData(response).noticeId),
+      )
+    } catch (error) {
+      if (__DEV__) console.log('[push] deep links unavailable in this client', error)
+    }
+
+    return () => {
+      active = false
+      subscription?.remove()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!pendingNoticeId || initialising || !user) return
+    if (!navigationRef.isReady()) return
+    navigationRef.navigate('NoticeDetail', { noticeId: pendingNoticeId })
+    setPendingNoticeId(null)
+  }, [pendingNoticeId, user, initialising, navigationRef])
+}
+
 function RootNavigator() {
   const { user, initialising } = useAuth()
 
@@ -152,14 +216,28 @@ function RootNavigator() {
   )
 }
 
+/**
+ * Split out so the deep-link hook can sit inside AuthProvider — it needs the
+ * session to know whether the signed-in stack exists yet — while still holding
+ * the ref the NavigationContainer is given.
+ */
+function NavigationRoot() {
+  const navigationRef = useNavigationContainerRef<RootStackParamList>()
+  useNoticeDeepLinks(navigationRef)
+
+  return (
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
+      <StatusBar style="light" />
+      <RootNavigator />
+    </NavigationContainer>
+  )
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer theme={navTheme}>
-          <StatusBar style="light" />
-          <RootNavigator />
-        </NavigationContainer>
+        <NavigationRoot />
       </AuthProvider>
     </SafeAreaProvider>
   )
