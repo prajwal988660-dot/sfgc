@@ -31,9 +31,20 @@ In your Supabase dashboard → **Project Settings → Database → Connection st
 - **Transaction** mode (port `6543`) → `DATABASE_URL`, used at runtime
 - **Session** mode (port `5432`) → `DIRECT_URL`, used by Prisma Migrate
 
-Keep `?pgbouncer=true&connection_limit=1` on `DATABASE_URL`. Serverless and
-container platforms open many short-lived connections; without pooling you will exhaust
-Supabase's connection limit and start seeing `too many connections` under load.
+Keep `?pgbouncer=true&connection_limit=10&pool_timeout=20` on `DATABASE_URL`.
+
+`pgbouncer=true` is what lets many short-lived connections share a few real ones; without it
+you exhaust Supabase's connection limit and start seeing `too many connections` under load.
+
+`connection_limit=10`, not 1. With a single connection the whole API is serialised through
+it — `authenticate` reads the user row on every request before the handler runs, so one class
+screen costs four sequential round trips, and every `Promise.all` in the codebase becomes
+decorative because the pairs queue instead of overlapping. That is not theoretical: it took
+the admin panel down at 47 users with Prisma `P2024` pool timeouts. Supabase's transaction
+pooler serves 10 from a single Render instance comfortably.
+
+`pool_timeout=20` because Prisma's default is 10 seconds, and a request that waits longer
+**fails** rather than merely being slow.
 
 Before the first deploy, create the schema from your machine:
 
@@ -72,7 +83,7 @@ built automatically.
 Set these on the service — **never commit them**:
 
 ```env
-DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
+DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=10&pool_timeout=20
 DIRECT_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 JWT_SECRET=<a fresh 48-byte random string — NOT the one in your local .env>
 JWT_EXPIRES_IN=7d

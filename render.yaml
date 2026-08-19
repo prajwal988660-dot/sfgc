@@ -55,7 +55,18 @@ services:
       # outbound network is IPv4, so the direct host will simply time out.
       #
       # DATABASE_URL (runtime, transaction pooling, port 6543):
-      #   postgresql://postgres.omqvpahtcuwxpvdnxjlq:PASSWORD@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&schema=sfgc_platform
+      #   postgresql://postgres.omqvpahtcuwxpvdnxjlq:PASSWORD@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=10&schema=sfgc_platform&pool_timeout=20
+      #
+      # connection_limit=10, not 1. One connection means the entire API is
+      # serialised through it: `authenticate` reads the user row on every
+      # request before the handler runs, so a single class screen costs four
+      # round trips, and every Promise.all in the codebase is decorative —
+      # the pairs queue instead of overlapping. Supabase's transaction pooler
+      # handles 10 from one instance comfortably.
+      #
+      # pool_timeout=20 because Prisma's default is 10s, and a request that
+      # waits longer fails with P2024 rather than merely being slow. That is
+      # what took the admin panel down at 47 users.
       #
       # DIRECT_URL (migrations, session pooling, port 5432):
       #   postgresql://postgres.omqvpahtcuwxpvdnxjlq:PASSWORD@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?schema=sfgc_platform
