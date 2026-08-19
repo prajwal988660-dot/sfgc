@@ -523,6 +523,39 @@ export interface StudyMaterialInput {
   isPublished?: boolean
 }
 
+// --------------------------------------------------------------- gallery ----
+
+/** A photograph on the public site. */
+export interface GalleryImage {
+  id: string
+  title: string
+  caption: string | null
+  imageUrl: string
+  /** Alt text. Null when nobody supplied one — do not fall back to the title. */
+  altText: string | null
+  album: string
+  sortOrder: number
+  isPublished: boolean
+  createdAt: string
+  uploadedBy: { id: string; name: string } | null
+}
+
+export interface GalleryImageInput {
+  title: string
+  caption?: string | null
+  imageUrl: string
+  altText?: string | null
+  album?: string
+  sortOrder?: number
+  isPublished?: boolean
+}
+
+/** An album name with how many images it holds. Derived, not stored. */
+export interface GalleryAlbum {
+  album: string
+  count: number
+}
+
 /** What the server reports about its upload capability. */
 export interface MediaConfig {
   /** False when the storage secrets are not set; uploads will be refused. */

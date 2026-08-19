@@ -387,6 +387,7 @@ export const NAV_LINKS = [
     ],
   },
   { label: 'Admissions', href: '/admissions' },
+  { label: 'Gallery', href: '/gallery' },
   { label: 'Events', href: '/events' },
   { label: 'Notices', href: '/notices' },
   { label: 'Placements', href: '/placements' },

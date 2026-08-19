@@ -20,6 +20,9 @@ const ROUTES: readonly Route[] = [
   { path: '/', changeFrequency: 'weekly', priority: 1 },
   { path: '/admissions', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/departments', changeFrequency: 'monthly', priority: 0.8 },
+  // Weekly rather than daily: photographs arrive in bursts after an event, not
+  // continuously like notices do.
+  { path: '/gallery', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/events', changeFrequency: 'daily', priority: 0.8 },
   { path: '/notices', changeFrequency: 'daily', priority: 0.8 },
   { path: '/placements', changeFrequency: 'monthly', priority: 0.7 },

@@ -132,6 +132,7 @@ model User {
   eventRegistrations EventRegistration[] @relation("UserRegistrations")
   noticesAuthored    Notice[]            @relation("NoticeAuthor")
   materialsUploaded  StudyMaterial[]     @relation("MaterialUploadedBy")
+  galleryUploaded    GalleryImage[]      @relation("GalleryUploadedBy")
 
   @@index([role])
   @@index([program, semester, section])
@@ -247,6 +248,46 @@ model StudyMaterial {
   @@index([subjectId])
   @@index([kind])
   @@map("study_materials")
+}
+
+// -------------------------------------------------------------- gallery ----
+
+/// A photograph on the public site.
+///
+/// Distinct from StudyMaterial, which is a file a student downloads: these are
+/// images shown to visitors, ordered and grouped for display. The homepage's
+/// existing "gallery" is a grid of facility icons drawn from static content —
+/// this is the first place actual photographs of the college live.
+model GalleryImage {
+  id      String  @id @default(cuid())
+  title   String
+  caption String?
+  /// Public URL. Uploaded through /api/media/upload, or pasted.
+  imageUrl String
+  /// Alternative text. Nullable rather than defaulted to the title, because a
+  /// description written for a sighted reader is rarely the right alt text.
+  altText String?
+
+  /// Groups images into albums — "Campus", "Sambhram 2026", "NSS Camp".
+  /// Free text rather than an enum: the albums a college wants are editorial
+  /// and change every year, and a migration per fest would be absurd.
+  album String @default("Campus")
+
+  /// Ascending. Ties break on createdAt, so an album with every position left
+  /// at 0 still comes back in a stable, sensible order rather than at random.
+  sortOrder Int @default(0)
+
+  isPublished Boolean @default(true)
+
+  uploadedById String?
+  uploadedBy   User?   @relation("GalleryUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// The public listing filters on isPublished and orders within an album.
+  @@index([isPublished, album, sortOrder])
+  @@map("gallery_images")
 }
 
 // -------------------------------------------------------------- subject ----

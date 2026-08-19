@@ -8,6 +8,7 @@ import noticeRoutes from './notices.routes'
 import progressRoutes from './progress.routes'
 import mediaRoutes from './media.routes'
 import materialRoutes from './materials.routes'
+import galleryRoutes from './gallery.routes'
 import {
   streamRoutes,
   classGroupRoutes,
@@ -27,6 +28,7 @@ router.use('/notices', noticeRoutes)
 router.use('/progress', progressRoutes)
 router.use('/media', mediaRoutes)
 router.use('/materials', materialRoutes)
+router.use('/gallery', galleryRoutes)
 router.use('/streams', streamRoutes)
 router.use('/classes', classGroupRoutes)
 router.use('/periods', periodRoutes)

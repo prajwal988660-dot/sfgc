@@ -45,6 +45,8 @@ export type Permission =
   /** See who has registered for an event, including their contact details. */
   | 'events:registrations:read'
   | 'materials:write'
+  /** Photographs on the public site. */
+  | 'gallery:write'
   | 'media:upload'
 
   // --- academic structure and people ---
@@ -74,6 +76,7 @@ const SUPER_ADMIN: readonly Permission[] = [
   'events:moderate',
   'events:registrations:read',
   'materials:write',
+  'gallery:write',
   'media:upload',
   'academics:manage',
   'students:read',
@@ -117,6 +120,7 @@ const CONTENT_ADMIN: readonly Permission[] = [
   'events:moderate',
   'events:registrations:read',
   'materials:write',
+  'gallery:write',
   'media:upload',
 ]
 

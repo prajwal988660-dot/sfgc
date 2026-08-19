@@ -38,6 +38,9 @@ import type {
   UpdateStudentInput,
   StudyMaterial,
   StudyMaterialInput,
+  GalleryImage,
+  GalleryImageInput,
+  GalleryAlbum,
   MaterialKind,
   RegisterInput,
   SaveProgressInput,
@@ -458,6 +461,30 @@ export class ApiClient {
       this.request<{ id: string; attendanceRecordsDeleted: number }>(`/students/${id}`, {
         method: 'DELETE',
       }),
+  }
+
+  // ------------------------------------------------------------ gallery ----
+
+  gallery = {
+    /** Public — readable without signing in. */
+    list: (query?: {
+      album?: string
+      q?: string
+      includeUnpublished?: boolean
+      page?: number
+      limit?: number
+    }) => this.paginated<GalleryImage>('/gallery', { query, anonymous: !query?.includeUnpublished }),
+
+    albums: () => this.request<GalleryAlbum[]>('/gallery/albums'),
+
+    create: (input: GalleryImageInput) =>
+      this.request<GalleryImage>('/gallery', { method: 'POST', body: input }),
+
+    update: (id: string, input: Partial<GalleryImageInput>) =>
+      this.request<GalleryImage>(`/gallery/${id}`, { method: 'PATCH', body: input }),
+
+    remove: (id: string) =>
+      this.request<{ id: string }>(`/gallery/${id}`, { method: 'DELETE' }),
   }
 
   // ---------------------------------------------------------- materials ----

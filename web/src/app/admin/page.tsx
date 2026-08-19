@@ -6,6 +6,7 @@ import {
   CalendarDays,
   GraduationCap,
   Image as ImageIcon,
+  Images,
   Megaphone,
   Users,
 } from 'lucide-react'
@@ -32,6 +33,12 @@ const CARDS = [
     icon: BookOpen,
     title: 'Library',
     blurb: 'Notes, question papers and solved papers for the student app.',
+  },
+  {
+    href: '/admin/gallery',
+    icon: Images,
+    title: 'Gallery',
+    blurb: 'Photographs shown on the public website, grouped into albums.',
   },
   {
     href: '/admin/notices',
