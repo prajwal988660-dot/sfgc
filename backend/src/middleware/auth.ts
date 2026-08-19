@@ -3,6 +3,7 @@ import type { Role } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { extractBearer, verifyToken } from '../lib/jwt'
 import { forbidden, unauthenticated } from '../lib/errors'
+import { can, canAll, type Permission } from '../auth/permissions'
 
 /**
  * The public shape of a user. Selected explicitly rather than by deleting
@@ -131,21 +132,60 @@ export function requireRole(...roles: Role[]): RequestHandler {
   }
 }
 
-export const requireAdmin = requireRole('ADMIN')
-export const requireStaff = requireRole('ADMIN', 'TEACHER')
+export const requireAdmin = requireRole('ADMIN', 'SUPER_ADMIN')
+export const requireStaff = requireRole('ADMIN', 'SUPER_ADMIN', 'TEACHER')
 
 /**
- * Students may only read their own records. Staff may read anyone's.
- * `paramName` is the route param holding the target student id.
+ * Restricts a route to holders of a permission.
+ *
+ * Prefer this over `requireRole`. A role list at the call site has to be
+ * revisited every time a role is added, and the failure is silent in whichever
+ * direction the list was wrong; a permission is a stable statement of what the
+ * endpoint does, and `auth/permissions.ts` decides who holds it.
  */
-export function requireSelfOrStaff(paramName = 'id'): RequestHandler {
+export function requirePermission(...permissions: Permission[]): RequestHandler {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      next(unauthenticated('Sign in to continue.'))
+      return
+    }
+    if (!canAll(req.user.role, permissions)) {
+      next(forbidden('Your account does not have permission to do that.'))
+      return
+    }
+    next()
+  }
+}
+
+/**
+ * Lets someone through for their own record, or for anyone else's if they hold
+ * `permission`.
+ *
+ * The permission is required rather than optional, and that is the point. This
+ * guard previously read "deny if the caller is a STUDENT and the id is not
+ * theirs", which is a rule about one role rather than about the data. Every
+ * role that is not STUDENT passed — so the day an admissions officer or a
+ * content administrator existed, both would have been reading any student's
+ * attendance and marks, with nothing in the code stating that intent and no
+ * error to reveal it. Naming the permission makes the grant deliberate.
+ *
+ * `paramName` is the route param holding the target user id.
+ */
+export function requireSelfOrPermission(
+  permission: Permission,
+  paramName = 'id',
+): RequestHandler {
   return (req, _res, next) => {
     if (!req.user) {
       next(unauthenticated('Sign in to continue.'))
       return
     }
     const targetId = req.params[paramName]
-    if (req.user.role === 'STUDENT' && targetId !== req.user.id) {
+    if (targetId === req.user.id) {
+      next()
+      return
+    }
+    if (!can(req.user.role, permission)) {
       next(forbidden('You can only view your own records.'))
       return
     }

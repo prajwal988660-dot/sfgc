@@ -16,6 +16,7 @@ import {
   type AuthUser,
 } from '../middleware/auth'
 import { validateBody } from '../middleware/validate'
+import { can } from '../auth/permissions'
 import {
   loginSchema,
   pushTokenSchema,
@@ -75,11 +76,15 @@ router.post(
   asyncHandler(async (req, res) => {
     const body = req.body as RegisterBody
 
-    if (body.role === 'ADMIN') {
-      throw forbidden('Administrator accounts cannot be created through registration.')
-    }
-    if (body.role === 'TEACHER' && req.user?.role !== 'ADMIN') {
-      throw forbidden('Only an administrator can create teacher accounts.')
+    // Self-registration may only ever create a student.
+    //
+    // Written as an allow-list of the one safe role rather than a deny-list of
+    // the unsafe ones. The previous form named ADMIN and TEACHER explicitly, so
+    // adding CONTENT_ADMIN and ADMISSIONS_OFFICER to the enum would have made
+    // both of them self-registerable by any anonymous visitor — a public
+    // endpoint handing out the ability to publish as the college.
+    if (body.role !== 'STUDENT' && !(req.user && can(req.user.role, 'users:manage'))) {
+      throw forbidden('Only an administrator can create that kind of account.')
     }
 
     const registerNo = body.role === 'STUDENT' ? body.registerNo : undefined
@@ -131,11 +136,17 @@ router.post(
               semester: body.semester ?? null,
               section: body.section ?? null,
             }
-          : {
-              ...common,
-              employeeId: body.employeeId,
-              designation: body.designation ?? null,
-            },
+          : body.role === 'TEACHER'
+            ? {
+                ...common,
+                employeeId: body.employeeId,
+                designation: body.designation ?? null,
+              }
+            // Every other role carries no role-specific columns. This branch was
+            // previously unreachable because an earlier `if` threw on ADMIN and
+            // narrowed the union to TEACHER; the guard is now a permission check,
+            // which narrows nothing, so the case has to be handled explicitly.
+            : { ...common },
       select: publicUserSelect,
     })
 

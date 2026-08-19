@@ -18,10 +18,26 @@ datasource db {
 
 // ---------------------------------------------------------------- enums ----
 
+/// Who someone is. What they may DO is decided by the permission map in
+/// src/auth/permissions.ts, not by comparing against these names directly —
+/// a role check scattered through a handler is a rule nobody can audit.
+///
+/// ADMIN is deprecated and retained only so the currently deployed API, which
+/// still compares against it, keeps working while the roles are widened. It is
+/// removed once every account has moved to SUPER_ADMIN and that build is live.
+/// Postgres cannot drop an enum value in place, so removing it later means
+/// swapping the type — see the migration that does it.
 enum Role {
   ADMIN
-  TEACHER
+
   STUDENT
+  TEACHER
+  /// Site content: notices, events, gallery, updates.
+  CONTENT_ADMIN
+  /// Admission applications and their documents, and nothing else.
+  ADMISSIONS_OFFICER
+  /// Everything, including managing users and their roles.
+  SUPER_ADMIN
 }
 
 enum AttendanceStatus {

@@ -10,7 +10,8 @@ import {
   unauthenticated,
   type ApiErrorDetail,
 } from '../lib/errors'
-import { authenticate, requireRole, requireSelfOrStaff } from '../middleware/auth'
+import { authenticate, requirePermission, requireSelfOrPermission } from '../middleware/auth'
+import { can } from '../auth/permissions'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import { computeSummary, gradeFor, rowPercentage } from '../lib/grading'
 import {
@@ -129,7 +130,11 @@ router.get(
     if (!user) throw unauthenticated()
 
     const query = parsedQuery<typeof progressQuerySchema>(res)
-    const card = await buildProgressCard(user.id, query, user.role !== 'STUDENT')
+    const card = await buildProgressCard(
+      user.id,
+      query,
+      can(user.role, 'progress:read:unpublished'),
+    )
     return ok(res, card)
   }),
 )
@@ -137,7 +142,7 @@ router.get(
 router.get(
   '/:studentId',
   authenticate,
-  requireSelfOrStaff('studentId'),
+  requireSelfOrPermission('progress:read:any', 'studentId'),
   validateQuery(progressQuerySchema),
   asyncHandler(async (req, res) => {
     const user = req.user
@@ -147,7 +152,13 @@ router.get(
     if (!studentId) throw notFound('Student')
 
     const query = parsedQuery<typeof progressQuerySchema>(res)
-    const card = await buildProgressCard(studentId, query, user.role !== 'STUDENT')
+    // Reading someone's card and reading their UNPUBLISHED marks are separate
+    // grants: a role may be allowed the former without the latter.
+    const card = await buildProgressCard(
+      studentId,
+      query,
+      can(user.role, 'progress:read:unpublished'),
+    )
     return ok(res, card)
   }),
 )
@@ -155,7 +166,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  requireRole('TEACHER', 'ADMIN'),
+  requirePermission('progress:write'),
   validateBody(createProgressSchema),
   asyncHandler(async (req, res) => {
     const user = req.user

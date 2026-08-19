@@ -6,7 +6,8 @@ import { prisma } from '../lib/prisma'
 import { asyncHandler } from '../lib/async'
 import { ok, created, paginated, readPagination, buildMeta } from '../lib/respond'
 import { badRequest, conflict, forbidden, notFound, unauthenticated } from '../lib/errors'
-import { authenticate, optionalAuth, requireAdmin, requireRole, type AuthUser } from '../middleware/auth'
+import { authenticate, optionalAuth, requirePermission, type AuthUser } from '../middleware/auth'
+import { can } from '../auth/permissions'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import {
   createEventSchema,
@@ -43,7 +44,7 @@ function currentUser(req: Request): AuthUser {
 }
 
 function isStaff(user: AuthUser | undefined): boolean {
-  return user?.role === 'ADMIN' || user?.role === 'TEACHER'
+  return user ? can(user.role, 'events:write') : false
 }
 
 function routeParam(req: Request, name: string): string {
@@ -244,7 +245,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('events:write'),
   validateBody(createEventSchema),
   asyncHandler(async (req, res) => {
     const user = currentUser(req)
@@ -268,7 +269,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('events:write'),
   validateBody(updateEventSchema),
   asyncHandler(async (req, res) => {
     const user = currentUser(req)
@@ -278,7 +279,7 @@ router.patch(
       select: { id: true, title: true, startsAt: true, endsAt: true, createdById: true },
     })
     if (!existing) throw notFound('Event')
-    if (user.role !== 'ADMIN' && existing.createdById !== user.id) {
+    if (!can(user.role, 'events:moderate') && existing.createdById !== user.id) {
       throw forbidden('You can only edit events you created.')
     }
 
@@ -313,7 +314,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  requireAdmin,
+  requirePermission('events:registrations:read'),
   asyncHandler(async (req, res) => {
     const id = routeParam(req, 'id')
     const existing = await prisma.event.findUnique({ where: { id }, select: { id: true } })
@@ -412,7 +413,7 @@ router.post(
 router.get(
   '/:id/registrations',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('events:write'),
   validateQuery(paginationQuerySchema),
   asyncHandler(async (req, res) => {
     const event = await findEventByIdOrSlug(routeParam(req, 'id'))
@@ -420,7 +421,7 @@ router.get(
     // A registration list is a contact sheet: names, emails and phone numbers.
     // Role alone is too coarse for that, so a teacher sees only the events they
     // created; admins see all.
-    if (req.user!.role === 'TEACHER' && event.createdById !== req.user!.id) {
+    if (!can(req.user!.role, 'events:moderate') && event.createdById !== req.user!.id) {
       throw forbidden('You can only view registrations for events you created.')
     }
 

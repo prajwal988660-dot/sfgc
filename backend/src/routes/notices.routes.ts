@@ -4,7 +4,8 @@ import { prisma } from '../lib/prisma'
 import { asyncHandler } from '../lib/async'
 import { ok, created, paginated, readPagination, buildMeta } from '../lib/respond'
 import { forbidden, notFound, unauthenticated } from '../lib/errors'
-import { authenticate, optionalAuth, requireRole, type AuthUser } from '../middleware/auth'
+import { authenticate, optionalAuth, requirePermission, type AuthUser } from '../middleware/auth'
+import { can } from '../auth/permissions'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import { notifyNotice } from '../services/push'
 import {
@@ -79,7 +80,7 @@ function visibilityClauses(user: AuthUser | undefined): Prisma.NoticeWhereInput[
     { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
   ]
 
-  if (user?.role === 'ADMIN') return clauses
+  if (user && can(user.role, 'notices:moderate')) return clauses
 
   if (user?.role === 'TEACHER') {
     clauses.push({ audience: { in: ['ALL', 'TEACHERS'] } })
@@ -100,7 +101,7 @@ function visibilityClauses(user: AuthUser | undefined): Prisma.NoticeWhereInput[
 
 /** The same rules as `visibilityClauses`, applied to a row already in memory. */
 function canView(notice: NoticeRow, user: AuthUser | undefined): boolean {
-  if (user && (user.role === 'ADMIN' || notice.authorId === user.id)) return true
+  if (user && (can(user.role, 'notices:moderate') || notice.authorId === user.id)) return true
   if (notice.expiresAt && notice.expiresAt.getTime() <= Date.now()) return false
 
   if (user?.role === 'TEACHER') {
@@ -119,7 +120,7 @@ function canView(notice: NoticeRow, user: AuthUser | undefined): boolean {
 
 /** Author or admin. Everyone else is refused. */
 function assertCanManage(notice: NoticeRow, user: AuthUser): void {
-  if (user.role === 'ADMIN') return
+  if (can(user.role, 'notices:moderate')) return
   if (notice.authorId === user.id) return
   throw forbidden('Only the author or an admin can change this notice.')
 }
@@ -203,7 +204,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('notices:write'),
   validateBody(createNoticeSchema),
   asyncHandler(async (req, res) => {
     const user = requireUser(req)
@@ -236,7 +237,7 @@ router.patch(
   authenticate,
   // Authorship alone is not the guard: a teacher demoted to STUDENT still owns
   // the notices they wrote, so the role is checked before ownership is.
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('notices:write'),
   validateBody(updateNoticeSchema),
   asyncHandler(async (req, res) => {
     const user = requireUser(req)
@@ -257,7 +258,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('notices:write'),
   asyncHandler(async (req, res) => {
     const user = requireUser(req)
     const id = readId(req)

@@ -6,7 +6,8 @@ import { prisma } from '../lib/prisma'
 import { asyncHandler } from '../lib/async'
 import { ok } from '../lib/respond'
 import { badRequest, forbidden, notFound, unauthenticated } from '../lib/errors'
-import { authenticate, requireRole, requireSelfOrStaff } from '../middleware/auth'
+import { authenticate, requirePermission, requireSelfOrPermission } from '../middleware/auth'
+import { can } from '../auth/permissions'
 import type { AuthUser } from '../middleware/auth'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import {
@@ -119,11 +120,14 @@ function currentUser(req: Request): AuthUser {
 
 /**
  * A teacher may only touch a subject they are assigned to; an admin may touch
- * any. Callers reach this only after `requireRole('TEACHER', 'ADMIN')`, so a
- * non-admin here is always a teacher.
+ * any. Callers reach this only after the attendance:mark permission, so
+ * anyone reaching it without students:manage is a teacher.
  */
 function assertSubjectAccess(user: AuthUser, teacherId: string | null): void {
-  if (user.role === 'ADMIN') return
+  // Holding the permission is not the same as being allowed this subject: a
+  // teacher has attendance:mark for their own classes only. Only a role that
+  // may manage anyone's students is exempt from the ownership rule.
+  if (can(user.role, 'students:manage')) return
   if (teacherId !== user.id) {
     throw forbidden('You can only manage attendance for subjects you teach.')
   }
@@ -251,7 +255,7 @@ async function buildStudentAttendance(studentId: string, query: StudentAttendanc
 router.post(
   '/mark',
   authenticate,
-  requireRole('TEACHER', 'ADMIN'),
+  requirePermission('attendance:mark'),
   validateBody(markAttendanceSchema),
   asyncHandler(async (req, res) => {
     const user = currentUser(req)
@@ -346,7 +350,7 @@ router.get(
 router.get(
   '/student/:id',
   authenticate,
-  requireSelfOrStaff('id'),
+  requireSelfOrPermission('attendance:read:any', 'id'),
   validateQuery(studentAttendanceQuerySchema),
   asyncHandler(async (req, res) => {
     const studentId = req.params.id
@@ -359,7 +363,7 @@ router.get(
 router.get(
   '/class/:subjectId',
   authenticate,
-  requireRole('TEACHER', 'ADMIN'),
+  requirePermission('attendance:mark'),
   validateQuery(classAttendanceQuerySchema),
   asyncHandler(async (req, res) => {
     const user = currentUser(req)

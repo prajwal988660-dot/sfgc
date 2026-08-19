@@ -1,11 +1,12 @@
 import { Router } from 'express'
-import type { Prisma } from '@prisma/client'
+import type { Prisma, Role } from '@prisma/client'
 
 import { prisma } from '../lib/prisma'
 import { asyncHandler } from '../lib/async'
 import { notFound, unauthenticated } from '../lib/errors'
 import { ok, created, paginated, readPagination, buildMeta } from '../lib/respond'
-import { authenticate, requireRole } from '../middleware/auth'
+import { authenticate, requirePermission } from '../middleware/auth'
+import { can } from '../auth/permissions'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import {
   createMaterialSchema,
@@ -42,7 +43,7 @@ const materialSelect = {
   uploadedBy: { select: { id: true, name: true } },
 } as const
 
-const isStaff = (role: string | undefined) => role === 'ADMIN' || role === 'TEACHER'
+const isStaff = (role: Role | undefined) => (role ? can(role, 'materials:write') : false)
 
 router.get(
   '/',
@@ -127,7 +128,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('materials:write'),
   validateBody(createMaterialSchema),
   asyncHandler(async (req, res) => {
     const body = req.body as CreateMaterialInput
@@ -143,7 +144,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('materials:write'),
   validateBody(updateMaterialSchema),
   asyncHandler(async (req, res) => {
     const id = req.params.id
@@ -165,7 +166,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('materials:write'),
   asyncHandler(async (req, res) => {
     const id = req.params.id
     if (!id) throw notFound('Material')

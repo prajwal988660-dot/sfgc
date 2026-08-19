@@ -4,7 +4,7 @@ import multer from 'multer'
 import { asyncHandler } from '../lib/async'
 import { badRequest, AppError } from '../lib/errors'
 import { ok } from '../lib/respond'
-import { authenticate, requireRole } from '../middleware/auth'
+import { authenticate, requirePermission } from '../middleware/auth'
 import {
   ALLOWED_MIME_TYPES,
   MAX_UPLOAD_BYTES,
@@ -63,7 +63,7 @@ const singleImage: RequestHandler = (req, res, next) => {
 router.get(
   '/config',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('media:upload'),
   asyncHandler(async (_req, res) => {
     return ok(res, {
       configured: isStorageConfigured(),
@@ -83,7 +83,7 @@ router.get(
 router.post(
   '/upload',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('media:upload'),
   singleImage,
   asyncHandler(async (req, res) => {
     if (!isStorageConfigured()) {

@@ -5,7 +5,8 @@ import { prisma } from '../lib/prisma'
 import { asyncHandler } from '../lib/async'
 import { ok, created } from '../lib/respond'
 import { badRequest, conflict, forbidden, notFound, unauthenticated } from '../lib/errors'
-import { authenticate, requireAdmin, requireStaff, type AuthUser } from '../middleware/auth'
+import { authenticate, requirePermission, type AuthUser } from '../middleware/auth'
+import { can } from '../auth/permissions'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import { toCalendarDay, todayCalendarDay } from '../validators/attendance.schema'
 import {
@@ -111,7 +112,7 @@ async function assertTeacher(teacherId: string): Promise<void> {
     where: { id: teacherId },
     select: { role: true },
   })
-  if (!teacher || (teacher.role !== 'TEACHER' && teacher.role !== 'ADMIN')) {
+  if (!teacher || !can(teacher.role, 'attendance:mark')) {
     throw badRequest('teacherId must reference a teacher account.', [
       { path: 'teacherId', message: `${teacherId} is not an existing teacher account.` },
     ])
@@ -141,7 +142,7 @@ router.get(
 
     // `all=true` lifts the default scope for staff only; a student is always
     // limited to their own enrolments no matter what they ask for.
-    const unscoped = query.all === true && user.role !== 'STUDENT'
+    const unscoped = query.all === true && can(user.role, 'subjects:read:all')
     if (!unscoped) {
       if (user.role === 'TEACHER') filters.push({ teacherId: user.id })
       else if (user.role === 'STUDENT') filters.push({ students: { some: { id: user.id } } })
@@ -178,7 +179,7 @@ router.get(
 router.get(
   '/:id/students',
   authenticate,
-  requireStaff,
+  requirePermission('students:read'),
   validateQuery(rosterQuerySchema),
   asyncHandler(async (req, res) => {
     const user = requireUser(req)
@@ -238,7 +239,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  requireAdmin,
+  requirePermission('subjects:manage'),
   validateBody(createSubjectSchema),
   asyncHandler(async (req, res) => {
     const body = req.body as CreateSubjectBody
@@ -281,7 +282,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  requireAdmin,
+  requirePermission('subjects:manage'),
   validateBody(updateSubjectSchema),
   asyncHandler(async (req, res) => {
     const id = pathId(req)
@@ -320,7 +321,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  requireAdmin,
+  requirePermission('subjects:manage'),
   asyncHandler(async (req, res) => {
     const id = pathId(req)
     const existing = await prisma.subject.findUnique({ where: { id }, select: { id: true } })
@@ -334,7 +335,7 @@ router.delete(
 router.post(
   '/:id/enroll',
   authenticate,
-  requireAdmin,
+  requirePermission('subjects:manage'),
   validateBody(enrollStudentsSchema),
   asyncHandler(async (req, res) => {
     const subjectId = pathId(req)

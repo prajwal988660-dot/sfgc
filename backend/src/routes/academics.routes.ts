@@ -6,7 +6,7 @@ import { asyncHandler } from '../lib/async'
 import { hashPassword } from '../lib/password'
 import { badRequest, conflict, notFound } from '../lib/errors'
 import { ok, created, paginated, readPagination, buildMeta } from '../lib/respond'
-import { authenticate, requireRole } from '../middleware/auth'
+import { authenticate, requirePermission } from '../middleware/auth'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import {
   createClassGroupSchema,
@@ -104,7 +104,7 @@ streamRoutes.get(
 streamRoutes.post(
   '/',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(createStreamSchema),
   asyncHandler(async (req, res) => {
     const body = req.body as CreateStreamInput
@@ -120,7 +120,7 @@ streamRoutes.post(
 streamRoutes.patch(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(updateStreamSchema),
   asyncHandler(async (req, res) => {
     const id = req.params.id
@@ -147,7 +147,7 @@ streamRoutes.patch(
 streamRoutes.delete(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   asyncHandler(async (req, res) => {
     const id = req.params.id
     if (!id) throw notFound('Stream')
@@ -211,7 +211,7 @@ classGroupRoutes.get(
 classGroupRoutes.post(
   '/',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(createClassGroupSchema),
   asyncHandler(async (req, res) => {
     const body = req.body as CreateClassGroupInput
@@ -249,7 +249,7 @@ classGroupRoutes.post(
 classGroupRoutes.patch(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(updateClassGroupSchema),
   asyncHandler(async (req, res) => {
     const id = req.params.id
@@ -284,7 +284,7 @@ classGroupRoutes.patch(
 classGroupRoutes.delete(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   asyncHandler(async (req, res) => {
     const id = req.params.id
     if (!id) throw notFound('Class')
@@ -338,7 +338,7 @@ periodRoutes.get(
 periodRoutes.post(
   '/',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(createPeriodSchema),
   asyncHandler(async (req, res) => {
     const body = req.body as CreatePeriodInput
@@ -357,7 +357,7 @@ periodRoutes.post(
 periodRoutes.patch(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(updatePeriodSchema),
   asyncHandler(async (req, res) => {
     const id = req.params.id
@@ -392,7 +392,7 @@ periodRoutes.patch(
 periodRoutes.delete(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   asyncHandler(async (req, res) => {
     const id = req.params.id
     if (!id) throw notFound('Period')
@@ -444,7 +444,7 @@ async function nextStudentCode(
 studentRoutes.get(
   '/',
   authenticate,
-  requireRole('ADMIN', 'TEACHER'),
+  requirePermission('students:read'),
   validateQuery(listStudentsQuerySchema),
   asyncHandler(async (_req, res) => {
     const query = parsedQuery<typeof listStudentsQuerySchema>(res) as ListStudentsQuery
@@ -489,7 +489,7 @@ studentRoutes.get(
 studentRoutes.post(
   '/',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(createStudentSchema),
   asyncHandler(async (req, res) => {
     const body = req.body as CreateStudentInput
@@ -556,7 +556,7 @@ studentRoutes.post(
 studentRoutes.patch(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   validateBody(updateStudentSchema),
   asyncHandler(async (req, res) => {
     const id = req.params.id
@@ -614,7 +614,7 @@ studentRoutes.patch(
 studentRoutes.delete(
   '/:id',
   authenticate,
-  requireRole('ADMIN'),
+  requirePermission('academics:manage'),
   asyncHandler(async (req, res) => {
     const id = req.params.id
     if (!id) throw notFound('Student')
