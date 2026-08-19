@@ -200,8 +200,9 @@ The `preview` and `production` profiles both produce an **APK** (`buildType: "ap
 `EXPO_PUBLIC_API_URL` — **edit `eas.json` to point at your deployed API** before building,
 because a phone in the wild cannot reach your laptop.
 
-> **`extra.eas.projectId` is a placeholder** (`00000000-…`) in both `app.json` files.
-> `eas init` replaces it. Push notifications will not work until it is a real id.
+> **`extra.eas.projectId` is set** in both `app.json` files — student `f658a032-…`,
+> teacher `f9d52fb8-…`, both under the `prajzo` Expo account. They were placeholders of
+> all zeros until `eas init` linked them; a fork will need its own `eas init`.
 
 ---
 
@@ -301,10 +302,11 @@ sfgc/
 
 - **The contact form does not submit anywhere.** It validates and confirms, then asks the
   visitor to email or call. Wiring it to an endpoint is a deliberate follow-up.
-- **Push notifications do not work yet.** Both apps carry a placeholder EAS `projectId` of
-  all zeros, so `getExpoPushTokenAsync` cannot mint a token and no device has ever stored
-  one. Run `eas init` in each app, then rebuild — the id compiles into the APK. A physical
-  device is also required; the Expo push service issues no token to a simulator.
+- **Push notifications are wired but unproven on a device.** Both apps now carry real EAS
+  project ids and v1.4.0 APKs are published with them compiled in, so `getExpoPushTokenAsync`
+  can mint a token. What has not happened is an end-to-end test: install v1.4.0 on a physical
+  Android phone, sign in, then post a notice and confirm it arrives. A simulator cannot be
+  used — the Expo push service issues no token to one.
 - **Placement figures** in `web/src/content/college.ts` (92% rate, 8.5 LPA highest) are
   editorial placeholders in the college's own published style. Replace them with verified
   numbers before this is used as the real site.

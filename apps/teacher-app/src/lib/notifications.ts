@@ -52,9 +52,11 @@ async function ensureAndroidChannel(): Promise<void> {
 /**
  * Resolves the EAS project id the push service needs to mint a token.
  *
- * Both apps currently carry a placeholder id of all zeros in app.json. Until
- * `eas init` writes a real one, `getExpoPushTokenAsync` below fails and this
- * module returns null — which is why no device has ever stored a token.
+ * Both apps carry a real id written by `eas init` (teacher: f9d52fb8…). Before
+ * that they held a placeholder of all zeros, which made `getExpoPushTokenAsync`
+ * fail and this module return null — no device could store a token. It is read
+ * from the bundled config rather than hardcoded, so the fallback to null still
+ * matters: a bare `expo prebuild` without the config would hit it.
  */
 function getProjectId(): string | undefined {
   return (

@@ -1,0 +1,29 @@
+// The production build. `tsconfig.json` is for typechecking and includes the
+// tests; this one compiles only what the server actually runs.
+//
+// Splitting them fixes two things that shared config caused:
+//
+//   1. `dist/` contained compiled test files. They `import { describe } from
+//      'vitest'`, and vitest is a devDependency — Render installs production
+//      dependencies only, so those files could not have been loaded there. They
+//      were never imported, so nothing broke, but shipping unloadable modules to
+//      production is not something to leave in place once seen.
+//
+//   2. vitest discovered `dist/**/*.test.js` alongside the real `src` tests and
+//      failed on them, reporting three failed files next to 52 passing tests.
+//      That is fixed properly in vitest.config.ts too — a build artefact should
+//      not be able to turn the suite red either way.
+//
+// Typechecking still covers the tests, because `npm run typecheck` keeps using
+// tsconfig.json. Tests that are not typechecked stop catching the type errors
+// they exist to catch.
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "prisma/seed.ts",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**"
+  ]
+}

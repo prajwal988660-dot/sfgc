@@ -835,10 +835,12 @@ async function seedUsers(): Promise<{
 
   // The admin password has no default and must be supplied deliberately.
   //
-  // This seed upserts the admin account, so running it silently rewrites that
-  // password. When the value came from a default published in this repository,
-  // every run quietly reset the live administrator back to a credential anyone
-  // could look up. Refusing here is the last point at which that is catchable.
+  // It is used only when the administrator does not yet exist — the upsert's
+  // `update` branch no longer touches any password (see the note below). It is
+  // still required rather than optional because a first run against an empty
+  // database has to set one, and defaulting it to a value published in this
+  // repository is how the live administrator ends up with a credential anyone
+  // can look up. Refusing here is the last point at which that is catchable.
   const adminPassword = env.SEED_ADMIN_PASSWORD
   if (adminPassword && adminPassword.length < 12) {
     throw new Error(
@@ -852,7 +854,9 @@ async function seedUsers(): Promise<{
   if (!adminPassword) {
     throw new Error(
       'SEED_ADMIN_PASSWORD is not set.\n\n' +
-        'The seed upserts the administrator account, so it needs a password to set.\n' +
+        'The seed creates the administrator account if it is missing, so it needs a\n' +
+        'password for that case. An administrator that already exists keeps the\n' +
+        'password it has — re-seeding never resets one.\n' +
         'Choose one (12+ characters) and pass it for this run only:\n\n' +
         '  SEED_ADMIN_PASSWORD="<your password>" npm run db:seed --workspace backend\n\n' +
         'To change the password without re-seeding everything, use:\n' +
@@ -868,12 +872,21 @@ async function seedUsers(): Promise<{
     hashPassword(STUDENT_PASSWORD),
   ])
 
+  // `passwordHash` appears in `create` but deliberately NOT in `update`, here and
+  // for every account below.
+  //
+  // Re-running the seed is meant to refresh sample profile data. It must not
+  // reach into an account that already exists and reset its password: once
+  // db:rotate-demo has given all 47 accounts their own credentials, an update
+  // branch that sets passwordHash would silently restore the published demo
+  // values and lock everyone back out of an account anyone can read the password
+  // for. Passwords belong to whoever holds the account after the first create;
+  // use `npm run user:password` to change one deliberately.
   const admin = await prisma.user.upsert({
     where: { email: env.SEED_ADMIN_EMAIL },
     update: {
       name: 'Dr. S. N. Venkatesh',
       role: 'ADMIN',
-      passwordHash: adminHash,
       designation: 'Principal',
       department: 'Administration',
       phone: COLLEGE_PHONE,
@@ -898,7 +911,6 @@ async function seedUsers(): Promise<{
       update: {
         name: teacher.name,
         role: 'TEACHER',
-        passwordHash: teacherHash,
         employeeId: teacher.employeeId,
         designation: teacher.designation,
         department: teacher.department,
@@ -927,7 +939,6 @@ async function seedUsers(): Promise<{
       update: {
         name: student.name,
         role: 'STUDENT',
-        passwordHash: studentHash,
         registerNo: student.registerNo,
         program: student.program,
         semester: student.semester,

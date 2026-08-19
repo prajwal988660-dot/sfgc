@@ -91,9 +91,19 @@ async function main() {
     return
   }
 
-  // Outside the repository, so it cannot be committed by accident. The CSV is
-  // the only copy of these passwords; nothing is printed to the terminal.
-  const out = resolve(process.cwd(), '..', 'sfgc-new-passwords.csv')
+  // The CSV is the only copy of these passwords; nothing is printed to the
+  // terminal, because a terminal keeps scrollback and gets screenshotted.
+  //
+  // This used to claim it wrote "outside the repository". It did not: npm runs
+  // a workspace script with cwd set to `backend/`, so `..` is the repository
+  // root. What actually keeps it out of a commit is the `sfgc-new-passwords.csv`
+  // line in .gitignore — belt rather than braces, and worth naming honestly so
+  // nobody deletes that line thinking the path already handles it.
+  //
+  // Set PASSWORD_CSV_OUT to put it somewhere else entirely, e.g. a USB stick.
+  const out = process.env.PASSWORD_CSV_OUT
+    ? resolve(process.env.PASSWORD_CSV_OUT)
+    : resolve(process.cwd(), '..', 'sfgc-new-passwords.csv')
   writeFileSync(out, rows.join('\n') + '\n', { mode: 0o600 })
 
   console.log(`\n  Rotated ${rotated} account(s). ${skipped} already had their own password.`)
