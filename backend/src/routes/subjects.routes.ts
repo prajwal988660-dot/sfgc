@@ -21,6 +21,12 @@ import {
   type UpdateSubjectBody,
 } from '../validators/subjects.schema'
 
+/**
+ * Upper bound on GET /subjects. Nine subjects exist today; a large college runs
+ * a few hundred. Deliberately generous, and deliberately present.
+ */
+const SUBJECT_LIST_CAP = 500
+
 const router = Router()
 
 /**
@@ -158,6 +164,12 @@ router.get(
         { section: 'asc' },
         { code: 'asc' },
       ],
+      // A ceiling rather than pagination: the teacher app and the admin panel
+      // both render this as one complete list to pick from, and paging it would
+      // change how they work. A college teaching more than this many subjects
+      // has outgrown a single dropdown, and 500 rows is where that should be
+      // noticed — rather than at whatever size the response happens to break.
+      take: SUBJECT_LIST_CAP,
     })
 
     return ok(res, subjects.map(toSubject))

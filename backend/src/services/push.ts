@@ -7,6 +7,15 @@ const EXCERPT_LENGTH = 140
 
 const FALLBACK_BODY = 'Tap to read the full notice.'
 
+/**
+ * Most devices one notice will wake in a single pass.
+ *
+ * Every token is held in memory and chunked for Expo, so this bounds the memory
+ * a single notice can cost on a 512 MB instance. Above this the send needs to
+ * be batched across calls rather than made larger.
+ */
+const PUSH_RECIPIENT_CAP = 2000
+
 export interface PushSummary {
   sent: number
   failed: number
@@ -129,7 +138,17 @@ export async function notifyNotice(notice: NoticePushPayload): Promise<PushSumma
     const recipients = await prisma.user.findMany({
       where: recipientWhere(notice),
       select: { expoPushToken: true },
+      take: PUSH_RECIPIENT_CAP,
     })
+    if (recipients.length === PUSH_RECIPIENT_CAP) {
+      // Say so rather than silently notifying a prefix of the college. Sending
+      // to some students and not others is worse than a delay, because nobody
+      // can tell it happened.
+      console.warn(
+        `[push] notice ${notice.id} matched at least ${PUSH_RECIPIENT_CAP} recipients — ` +
+          'the cap was hit and some devices were not notified. Batch this send.',
+      )
+    }
     if (recipients.length === 0) return { sent: 0, failed: 0 }
 
     // Two accounts on one device share a token; sending twice would double-buzz.

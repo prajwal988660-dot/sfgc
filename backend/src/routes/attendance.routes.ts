@@ -29,6 +29,9 @@ const RECENT_RECORD_LIMIT = 200
 /** How many offending ids are named in an error message before it truncates. */
 const NAMED_ID_LIMIT = 10
 
+/** Largest roster a single class can return. A section is tens of students. */
+const ROSTER_CAP = 300
+
 const router = Router()
 
 // ------------------------------------------------------------- helpers ----
@@ -385,6 +388,12 @@ router.get(
           where: { role: 'STUDENT' },
           select: studentRefSelect,
           orderBy: [{ registerNo: 'asc' }, { name: 'asc' }],
+          // One teachable class, not a whole cohort. Without a bound this is
+          // the one nested read that pagination never covered — the enrolment
+          // join has no natural ceiling, and a subject wrongly enrolled with
+          // every student in the college would load all of them into memory
+          // to render a register nobody could use.
+          take: ROSTER_CAP,
         },
       },
     })
