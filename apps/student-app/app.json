@@ -3,7 +3,7 @@
     "name": "SFGC Student",
     "slug": "sfgc-student",
     "scheme": "sfgcstudent",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "in.ac.sfgc.student",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#6b1230",
         "foregroundImage": "./assets/android-icon-foreground.png",

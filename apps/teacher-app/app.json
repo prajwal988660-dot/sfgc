@@ -3,7 +3,7 @@
     "name": "SFGC Teacher",
     "slug": "sfgc-teacher",
     "scheme": "sfgcteacher",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "in.ac.sfgc.teacher",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#0f2b56",
         "foregroundImage": "./assets/android-icon-foreground.png",
