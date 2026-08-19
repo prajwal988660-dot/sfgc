@@ -1,0 +1,50 @@
+# Keeps the API from going to sleep.
+#
+# The API runs on Render's free tier, which spins a service down after roughly
+# 15 minutes without traffic. The next request then pays for a full boot —
+# measured at about 38 seconds — which the mobile apps experience as a launch
+# that hangs and then fails.
+#
+# A request every 10 minutes keeps the instance warm, so a student opening the
+# app in the evening gets the same response time as one opening it at noon.
+#
+# Note on Render's free allowance: 750 instance-hours a month, and a service
+# kept awake continuously uses about 730. That fits, but only while this is the
+# only free service in the account. Adding a second one would exhaust the
+# allowance and both would be suspended.
+
+name: Keep API awake
+
+on:
+  schedule:
+    # Every 10 minutes. GitHub queues cron jobs on shared runners and can delay
+    # them by several minutes under load, so this is a floor rather than a
+    # guarantee — which is fine, as the sleep threshold is 15 minutes.
+    - cron: '*/10 * * * *'
+  # Lets you confirm it works without waiting for the next slot.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the health endpoint
+        run: |
+          # --max-time 120 because a ping that lands on a sleeping instance has
+          # to sit through the cold start; failing at 30s would leave it asleep
+          # and defeat the point.
+          #
+          # /api/health is deliberate: it answers 200 even when the database is
+          # unreachable, so a Supabase blip does not mark this run as failed.
+          for attempt in 1 2 3; do
+            if curl --silent --show-error --fail --max-time 120 \
+                 https://sfgc-api.onrender.com/api/health; then
+              echo ""
+              echo "API is awake (attempt $attempt)"
+              exit 0
+            fi
+            echo "attempt $attempt failed, retrying in 15s"
+            sleep 15
+          done
+          echo "API did not respond after 3 attempts"
+          exit 1
