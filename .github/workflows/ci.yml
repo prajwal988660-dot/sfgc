@@ -55,8 +55,19 @@ jobs:
       - name: Typecheck every workspace
         run: npm run typecheck
 
+      # The suite needs an environment even though it never opens a connection.
+      # middleware/auth.test.ts imports the middleware, which imports lib/prisma,
+      # which imports config/env — and config/env calls process.exit(1) on an
+      # invalid environment. That is correct behaviour for a server and invisible
+      # locally, where a .env always exists; in CI it killed the runner and took
+      # 12 of the 52 tests with it, reporting "40 passed" rather than a failure.
+      # These values are parsed and discarded; nothing here reaches a database.
       - name: Test
         run: npm run test --workspace backend
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db?schema=sfgc_platform
+          DIRECT_URL: postgresql://user:pass@localhost:5432/db?schema=sfgc_platform
+          JWT_SECRET: ci-only-secret-not-used-for-anything-real
 
       # Catches what typecheck cannot: a Next.js build failure, a bad import in
       # a route file, a page that cannot be prerendered.
