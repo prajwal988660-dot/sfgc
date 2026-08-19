@@ -422,23 +422,29 @@ periodRoutes.delete(
  * reality after a manual insert or a deletion.
  */
 async function nextStudentCode(
+  tx: Prisma.TransactionClient,
   streamCode: string,
   admissionYear: number,
 ): Promise<string> {
-  const yearPart = String(admissionYear % 100).padStart(2, '0')
-  const prefix = `${streamCode}${yearPart}`
+  const prefix = `${streamCode}${String(admissionYear % 100).padStart(2, '0')}`
 
-  const existing = await prisma.user.findMany({
-    where: { studentCode: { startsWith: prefix } },
-    select: { studentCode: true },
-  })
-
-  const highest = existing.reduce((max, row) => {
-    const tail = Number.parseInt((row.studentCode ?? '').slice(prefix.length), 10)
-    return Number.isNaN(tail) ? max : Math.max(max, tail)
-  }, 0)
-
-  return `${prefix}${String(highest + 1).padStart(3, '0')}`
+  // One statement: create the counter for this stream-year or bump it, and read
+  // the result back.
+  //
+  // The previous version read every existing code sharing the prefix and took
+  // the maximum in JS. Two students created in the same moment therefore read
+  // the same value, computed the same code, and the second insert failed on the
+  // unique index — reporting that a code nobody had seen was already taken. It
+  // also could not use the index: the database collation is en_US.UTF-8, so a
+  // `startsWith` filter needs text_pattern_ops and fell back to a sequential
+  // scan of every user on every student creation.
+  const rows = await tx.$queryRaw<{ seq: number }[]>`
+    INSERT INTO "student_code_counters" ("prefix", "seq") VALUES (${prefix}, 1)
+    ON CONFLICT ("prefix") DO UPDATE SET "seq" = "student_code_counters"."seq" + 1
+    RETURNING "seq"
+  `
+  const seq = rows[0]?.seq ?? 1
+  return `${prefix}${String(seq).padStart(3, '0')}`
 }
 
 studentRoutes.get(
@@ -515,7 +521,13 @@ studentRoutes.post(
     }
 
     const admissionYear = body.admissionYear ?? new Date().getFullYear()
-    const studentCode = await nextStudentCode(group.stream.code, admissionYear)
+    // Its own short transaction, and deliberately not wrapped around the
+    // account creation below: bcrypt hashing takes ~100ms, and holding the
+    // counter row locked across it would serialise every concurrent student
+    // creation behind one password hash.
+    const studentCode = await prisma.$transaction((tx) =>
+      nextStudentCode(tx, group.stream.code, admissionYear),
+    )
 
     // Without an explicit password the student's own ID is the initial one.
     // It is unique, printed on their card, and has to be changed on first use.

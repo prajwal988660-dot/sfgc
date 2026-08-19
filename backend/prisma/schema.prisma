@@ -347,6 +347,22 @@ model Admission {
   @@map("admissions")
 }
 
+/// The last student code issued for one stream in one intake year.
+///
+/// Same shape, and for the same reason, as AdmissionCounter below: the previous
+/// generator read every existing code sharing the prefix, took the maximum in
+/// JS and added one. Two students created at the same moment therefore read the
+/// same value and computed the same code, and the second insert failed on the
+/// unique index — telling an administrator that a code they had never seen was
+/// already taken. `UPDATE ... RETURNING` decides it in one statement instead.
+model StudentCodeCounter {
+  /// e.g. "BCA26" — stream code plus the two-digit intake year.
+  prefix String @id
+  seq    Int    @default(0)
+
+  @@map("student_code_counters")
+}
+
 /// One row per intake year, holding the last application number issued.
 ///
 /// Exists so the number can be produced by a single atomic statement rather
@@ -497,6 +513,11 @@ model Attendance {
   @@unique([studentId, subjectId, date, periodNumber])
   @@index([subjectId, date])
   @@index([studentId])
+  /// markedBy is a RESTRICT relation, so deleting a teacher makes Postgres
+  /// check every attendance row for references. Without this index that is a
+  /// full scan of the largest table in the schema, taken while holding the
+  /// connection — and it happens the day a teacher leaves.
+  @@index([markedById])
   @@map("attendance")
 }
 
