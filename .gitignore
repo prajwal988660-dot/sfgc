@@ -66,3 +66,6 @@ Untitled.*
 
 # The CSV written by db:rotate-demo. The only copy of those passwords.
 sfgc-new-passwords.csv
+
+.vercel
+.env*
