@@ -8,6 +8,7 @@ import { ok, created, paginated, readPagination, buildMeta } from '../lib/respon
 import { authenticate, optionalAuth, requirePermission } from '../middleware/auth'
 import { can } from '../auth/permissions'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
+import { cachePublicContent } from '../middleware/cache'
 import {
   createGalleryImageSchema,
   listGalleryQuerySchema,
@@ -45,6 +46,7 @@ const gallerySelect = {
 
 router.get(
   '/',
+  cachePublicContent,
   // Anonymous is fine and expected; a signed-in staff member additionally gets
   // the option of seeing unpublished drafts.
   optionalAuth,
@@ -96,6 +98,7 @@ router.get(
  */
 router.get(
   '/albums',
+  cachePublicContent,
   optionalAuth,
   asyncHandler(async (req, res) => {
     const mayseeDrafts = Boolean(req.user && can(req.user.role, 'gallery:write'))

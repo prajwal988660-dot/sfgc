@@ -44,8 +44,24 @@ const STUDENT_DOMAIN = 'student.sfgc.ac.in'
 const COLLEGE_PHONE = '080-22955369'
 
 /** Demo credentials. This is sample data — these are meant to be public. */
-const TEACHER_PASSWORD = 'teacher123'
-const STUDENT_PASSWORD = 'student123'
+/**
+ * Passwords for the seeded demo accounts.
+ *
+ * These values are published in this repository, so every account created with
+ * them is signable-in by anyone who has read it. That is acceptable for
+ * invented data and unacceptable the moment a real student's marks are in the
+ * database — which is a line that gets crossed quietly, without anyone
+ * re-reading the seed.
+ *
+ * Override them for any install that will hold real data:
+ *   SEED_TEACHER_PASSWORD=... SEED_STUDENT_PASSWORD=... npm run db:seed
+ *
+ * And for an install that has ALREADY been seeded, changing these does nothing
+ * to the accounts that exist. Use `npm run db:rotate-demo`, which finds every
+ * account still using a published password and issues each a unique one.
+ */
+const TEACHER_PASSWORD = process.env.SEED_TEACHER_PASSWORD ?? 'teacher123'
+const STUDENT_PASSWORD = process.env.SEED_STUDENT_PASSWORD ?? 'student123'
 
 function mulberry32(seed: number): () => number {
   let state = seed >>> 0

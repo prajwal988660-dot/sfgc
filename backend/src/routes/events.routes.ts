@@ -10,6 +10,7 @@ import { authenticate, optionalAuth, requirePermission, type AuthUser } from '..
 import { can } from '../auth/permissions'
 import { canModifyEvent } from '../auth/ownership'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
+import { cachePublicContent } from '../middleware/cache'
 import {
   createEventSchema,
   listEventsQuerySchema,
@@ -155,6 +156,7 @@ function uniqueViolationTargets(error: unknown): string[] | null {
 
 router.get(
   '/',
+  cachePublicContent,
   optionalAuth,
   validateQuery(listEventsQuerySchema),
   asyncHandler(async (req, res) => {

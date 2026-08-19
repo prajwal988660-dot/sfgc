@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { prisma, pingDatabase } from '../lib/prisma'
 import { asyncHandler } from '../lib/async'
 import { ok } from '../lib/respond'
+import { cachePublicStats } from '../middleware/cache'
 
 const router = Router()
 
@@ -110,6 +111,7 @@ async function countPublicStats(): Promise<StatCounts> {
  */
 router.get(
   '/stats/public',
+  cachePublicStats,
   asyncHandler(async (_req, res) => {
     const counts = await countPublicStats()
     const payload: PublicStats = { ...counts, placementRate: PLACEMENT_RATE }

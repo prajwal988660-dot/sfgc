@@ -8,6 +8,7 @@ import { authenticate, optionalAuth, requirePermission, type AuthUser } from '..
 import { can } from '../auth/permissions'
 import { canModifyNotice } from '../auth/ownership'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
+import { cachePublicContent } from '../middleware/cache'
 import { notifyNotice } from '../services/push'
 import {
   createNoticeSchema,
@@ -147,6 +148,7 @@ function dispatchPush(notice: NoticeRow): void {
 
 router.get(
   '/',
+  cachePublicContent,
   optionalAuth,
   validateQuery(listNoticesQuerySchema),
   asyncHandler(async (req, res) => {

@@ -18,7 +18,8 @@
     "db:backfill": "tsx prisma/backfill-classes.ts",
     "user:password": "tsx scripts/set-password.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:rotate-demo": "tsx scripts/rotate-demo-passwords.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

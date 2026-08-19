@@ -63,3 +63,6 @@ prisma/*.db-journal
 # Stray editor scratch files. One of these leaked a live database URI.
 Untitled
 Untitled.*
+
+# The CSV written by db:rotate-demo. The only copy of those passwords.
+sfgc-new-passwords.csv
