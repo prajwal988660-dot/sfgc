@@ -56,12 +56,39 @@ DIRECT_URL="postgresql://postgres.omqvpahtcuwxpvdnxjlq:YOUR-PASSWORD@aws-0-<regi
 Then create the tables and fill them with realistic demo data:
 
 ```bash
-npm run db:push      # create the schema in Postgres
-npm run db:seed      # 1 admin, 6 teachers, 40 students, 9 subjects,
-                     # ~30 days of attendance, marks, events and notices
+npm run db:deploy                          # apply migrations
+SEED_ADMIN_PASSWORD="choose-a-long-one"   npm run db:seed                          # 1 admin, 6 teachers, 40 students, 9 subjects,
+                                           # ~30 days of attendance, marks, events and notices
+npm run db:backfill --workspace backend    # derive streams, sections, periods and student IDs
 ```
 
-`db:seed` is idempotent — safe to re-run.
+`db:seed` is idempotent — safe to re-run. It has no default admin password on
+purpose: it upserts the administrator account, so a default committed here would
+be a published credential for every install. Pass one for the run.
+
+### Changing the schema
+
+The schema is managed by **migration files** under `backend/prisma/migrations`, not
+by `db push`. `0_init` is a baseline: it describes the tables as they already
+existed and was recorded with `migrate resolve --applied`, so it has never been
+executed against the production database.
+
+`prisma migrate dev` — the usual authoring command — wants a **shadow database** it
+can create and drop, which Supabase does not permit over the pooler. Generate
+migrations by diffing instead:
+
+```bash
+cd backend
+# 1. edit prisma/schema.prisma, then:
+mkdir -p prisma/migrations/$(date +%Y%m%d%H%M%S)_describe_the_change
+npx prisma migrate diff   --from-schema-datasource prisma/schema.prisma   --to-schema-datamodel prisma/schema.prisma   --script > prisma/migrations/<the-folder>/migration.sql
+
+# 2. READ the generated SQL before running it
+npx prisma migrate deploy
+```
+
+Always read the generated SQL. `migrate diff` will happily emit a `DROP COLUMN`
+for a rename, which destroys the data in it.
 
 ---
 
@@ -82,9 +109,18 @@ The seed prints these when it finishes:
 
 | Role | Identifier | Password |
 | --- | --- | --- |
-| Admin | `admin@sfgc.ac.in` | `Admin@123` |
+| Admin | `admin@sfgc.ac.in` | the `SEED_ADMIN_PASSWORD` you supplied |
 | Teacher | `T01` | `teacher123` |
 | Student | `SFGC101` | `student123` |
+
+> The teacher and student passwords are **demo credentials for sample data** and are
+> published in this repository. Before real students use this, change them — or
+> replace the seeded accounts. To change one account's password without re-running
+> the seed:
+>
+> ```bash
+> NEW_PASSWORD="..." npm run user:password --workspace backend -- admin@sfgc.ac.in
+> ```
 
 Login accepts an **email, a register number, or an employee ID** as the identifier.
 
@@ -216,7 +252,9 @@ sfgc/
 | Command | What it does |
 | --- | --- |
 | `npm run db:studio` | Prisma Studio — browse and edit the database |
-| `npm run db:migrate` | Create a versioned migration instead of `db:push` |
+| `npm run db:deploy` | Apply pending migrations (this is the one to use) |
+| `npm run db:backfill --workspace backend` | Derive streams, sections, periods and student IDs from existing data |
+| `NEW_PASSWORD=... npm run user:password --workspace backend -- <identifier>` | Set one account's password |
 | `npm run build` | Build shared, backend and web |
 | `npm run typecheck` | Typecheck every workspace |
 

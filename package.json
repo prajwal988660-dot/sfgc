@@ -22,11 +22,11 @@
     "build:shared": "npm run build --workspace @sfgc/shared",
     "build": "npm run build:shared && npm run build:backend && npm run build:web",
     "db:generate": "npm run db:generate --workspace backend",
-    "db:push": "npm run db:push --workspace backend",
-    "db:migrate": "npm run db:migrate --workspace backend",
     "db:seed": "npm run db:seed --workspace backend",
     "db:studio": "npm run db:studio --workspace backend",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "smoke": "node scripts/smoke-test.mjs"
+    "smoke": "node scripts/smoke-test.mjs",
+    "db:deploy": "npm run db:deploy --workspace backend",
+    "db:backfill": "npm run db:backfill --workspace backend"
   }
 }
