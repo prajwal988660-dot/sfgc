@@ -113,6 +113,19 @@ The seed prints these when it finishes:
 | Teacher | `T01` | `teacher123` |
 | Student | `SFGC101` | `student123` |
 
+> **These are published passwords.** They are written here, in `prisma/seed.ts`, and in
+> every copy of this repository — so anyone who has read it can sign in as any seeded
+> teacher or student. That is fine while the only data is invented, and not fine the
+> moment a real student's marks exist. Before real people use this:
+>
+> ```bash
+> npm run db:rotate-demo --workspace backend
+> ```
+>
+> It gives every account still using a published password a unique one and writes them to
+> a CSV outside the repository. A fresh install can avoid creating them at all with
+> `SEED_TEACHER_PASSWORD=... SEED_STUDENT_PASSWORD=... npm run db:seed`.
+
 > The teacher and student passwords are **demo credentials for sample data** and are
 > published in this repository. Before real students use this, change them — or
 > replace the seeded accounts. To change one account's password without re-running
@@ -194,20 +207,42 @@ because a phone in the wild cannot reach your laptop.
 
 ## 6 · Roles and permissions
 
-Three roles — `ADMIN`, `TEACHER`, `STUDENT` — enforced by middleware on every route
-(`backend/src/middleware/auth.ts`).
+Five roles — `STUDENT`, `TEACHER`, `CONTENT_ADMIN`, `ADMISSIONS_OFFICER`, `SUPER_ADMIN`.
+(`ADMIN` still exists in the enum and is deprecated; no account holds it.)
 
-|  | Admin | Teacher | Student |
-| --- | :-: | :-: | :-: |
-| Mark attendance | ✅ | ✅ *(own subjects only)* | ❌ |
-| View own attendance | ✅ | ✅ | ✅ |
-| View class attendance | ✅ | ✅ *(own subjects only)* | ❌ |
-| Enter marks | ✅ | ✅ *(own subjects only)* | ❌ |
-| View own progress card | ✅ | ✅ | ✅ |
-| Post notices | ✅ | ✅ | ❌ |
-| Create/edit events | ✅ | ✅ *(own events)* | ❌ |
-| Register for events | ✅ | ✅ | ✅ *(also public, no login)* |
-| Manage subjects & enrolment | ✅ | ❌ | ❌ |
+Routes do **not** check role names. They name a *permission*, and
+`backend/src/auth/permissions.ts` decides which roles hold it:
+
+```ts
+router.post('/', authenticate, requirePermission('gallery:write'), ...)
+```
+
+That indirection exists because role checks fail silently in both directions. A guard
+written as `role !== 'STUDENT'` **admits** every role added later — which is how an
+admissions officer would have been handed every student's attendance and marks the day
+that role was created. One written as `role === 'ADMIN'` **denies** `SUPER_ADMIN`, which
+is the same account under a new name. Neither shows up at the call site.
+
+Permissions alone are never sufficient where the answer depends on the row. `attendance:mark`
+gets a teacher to the endpoint; `canManageSubject` in `backend/src/auth/ownership.ts` decides
+whether *that* subject is theirs. Those rules are pure functions with tests.
+
+|  | Super admin | Teacher | Content admin | Admissions | Student |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| Mark attendance | ✅ | ✅ *(own subjects)* | ❌ | ❌ | ❌ |
+| View any attendance / marks | ✅ | ✅ | ❌ | ❌ | ❌ *(own only)* |
+| Enter marks | ✅ | ✅ *(own subjects)* | ❌ | ❌ | ❌ |
+| Post notices | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Create / edit events | ✅ | ✅ *(own)* | ✅ *(any)* | ❌ | ❌ |
+| Gallery & library | ✅ | ✅ *(library)* | ✅ | ❌ | ❌ |
+| Admission applications | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Streams, classes, students | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Manage users and roles | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Register for events | ✅ | ✅ | ✅ | ✅ | ✅ *(also public, no login)* |
+
+Note the two empty columns on student records: a content admin and an admissions officer
+have **no** access to attendance or marks. That is the grant the old "not a student" checks
+got wrong.
 
 A student calling a write endpoint gets `403 FORBIDDEN`. A teacher touching a subject they
 do not teach gets the same — the role check alone is not treated as sufficient.
@@ -257,6 +292,8 @@ sfgc/
 | `NEW_PASSWORD=... npm run user:password --workspace backend -- <identifier>` | Set one account's password |
 | `npm run build` | Build shared, backend and web |
 | `npm run typecheck` | Typecheck every workspace |
+| `npm run test --workspace backend` | Run the test suite (52 tests over the permission and ownership rules) |
+| `npm run db:rotate-demo --workspace backend` | Replace every published demo password with a unique one. **Run before real students use this.** |
 
 ---
 
@@ -264,12 +301,19 @@ sfgc/
 
 - **The contact form does not submit anywhere.** It validates and confirms, then asks the
   visitor to email or call. Wiring it to an endpoint is a deliberate follow-up.
-- **Push notifications need a real EAS `projectId`** and a physical device — the Expo push
-  service issues no token to a simulator.
+- **Push notifications do not work yet.** Both apps carry a placeholder EAS `projectId` of
+  all zeros, so `getExpoPushTokenAsync` cannot mint a token and no device has ever stored
+  one. Run `eas init` in each app, then rebuild — the id compiles into the APK. A physical
+  device is also required; the Expo push service issues no token to a simulator.
 - **Placement figures** in `web/src/content/college.ts` (92% rate, 8.5 LPA highest) are
   editorial placeholders in the college's own published style. Replace them with verified
   numbers before this is used as the real site.
-- **The gallery uses generated gradient tiles**, not photographs, because no photo library
-  was available. Drop real images into `web/public/` and swap them in.
+- **The homepage's facilities grid uses generated gradient tiles**, not photographs. The
+  real photo gallery is a separate feature at `/gallery`, managed from `/admin/gallery`.
+- **File uploads need Supabase Storage configured.** Without `SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` the upload button is disabled and pasting a URL still works.
+  Admission documents need a *separate, private* bucket (`SUPABASE_ADMISSIONS_BUCKET`) —
+  the code refuses to fall back to the public one, because a scan of an applicant's ID must
+  not be world-readable.
 - This is a recreation built for the college; it is not affiliated with, nor an official
   property of, Seshadripuram First Grade College.
