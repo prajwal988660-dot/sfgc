@@ -8,6 +8,7 @@ import { ok, created, paginated, readPagination, buildMeta } from '../lib/respon
 import { badRequest, conflict, forbidden, notFound, unauthenticated } from '../lib/errors'
 import { authenticate, optionalAuth, requirePermission, type AuthUser } from '../middleware/auth'
 import { can } from '../auth/permissions'
+import { canModifyEvent } from '../auth/ownership'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import {
   createEventSchema,
@@ -279,7 +280,7 @@ router.patch(
       select: { id: true, title: true, startsAt: true, endsAt: true, createdById: true },
     })
     if (!existing) throw notFound('Event')
-    if (!can(user.role, 'events:moderate') && existing.createdById !== user.id) {
+    if (!canModifyEvent(user.role, user.id, existing.createdById)) {
       throw forbidden('You can only edit events you created.')
     }
 
@@ -421,7 +422,7 @@ router.get(
     // A registration list is a contact sheet: names, emails and phone numbers.
     // Role alone is too coarse for that, so a teacher sees only the events they
     // created; admins see all.
-    if (!can(req.user!.role, 'events:moderate') && event.createdById !== req.user!.id) {
+    if (!canModifyEvent(req.user!.role, req.user!.id, event.createdById)) {
       throw forbidden('You can only view registrations for events you created.')
     }
 

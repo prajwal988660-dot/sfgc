@@ -6,6 +6,7 @@ import { ok, created, paginated, readPagination, buildMeta } from '../lib/respon
 import { forbidden, notFound, unauthenticated } from '../lib/errors'
 import { authenticate, optionalAuth, requirePermission, type AuthUser } from '../middleware/auth'
 import { can } from '../auth/permissions'
+import { canModifyNotice } from '../auth/ownership'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import { notifyNotice } from '../services/push'
 import {
@@ -101,7 +102,7 @@ function visibilityClauses(user: AuthUser | undefined): Prisma.NoticeWhereInput[
 
 /** The same rules as `visibilityClauses`, applied to a row already in memory. */
 function canView(notice: NoticeRow, user: AuthUser | undefined): boolean {
-  if (user && (can(user.role, 'notices:moderate') || notice.authorId === user.id)) return true
+  if (user && canModifyNotice(user.role, user.id, notice.authorId)) return true
   if (notice.expiresAt && notice.expiresAt.getTime() <= Date.now()) return false
 
   if (user?.role === 'TEACHER') {

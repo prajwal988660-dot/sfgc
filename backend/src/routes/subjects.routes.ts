@@ -7,6 +7,7 @@ import { ok, created } from '../lib/respond'
 import { badRequest, conflict, forbidden, notFound, unauthenticated } from '../lib/errors'
 import { authenticate, requirePermission, type AuthUser } from '../middleware/auth'
 import { can } from '../auth/permissions'
+import { canManageSubject } from '../auth/ownership'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import { toCalendarDay, todayCalendarDay } from '../validators/attendance.schema'
 import {
@@ -192,7 +193,7 @@ router.get(
       select: subjectSelect,
     })
     if (!subject) throw notFound('Subject')
-    if (user.role === 'TEACHER' && subject.teacher?.id !== user.id) {
+    if (!canManageSubject(user.role, user.id, subject.teacher?.id ?? null)) {
       throw forbidden('You can only open the roster for a subject you teach.')
     }
 

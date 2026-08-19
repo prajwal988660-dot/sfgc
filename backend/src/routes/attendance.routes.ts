@@ -7,7 +7,7 @@ import { asyncHandler } from '../lib/async'
 import { ok } from '../lib/respond'
 import { badRequest, forbidden, notFound, unauthenticated } from '../lib/errors'
 import { authenticate, requirePermission, requireSelfOrPermission } from '../middleware/auth'
-import { can } from '../auth/permissions'
+import { canManageSubject } from '../auth/ownership'
 import type { AuthUser } from '../middleware/auth'
 import { validateBody, validateQuery, parsedQuery } from '../middleware/validate'
 import {
@@ -124,13 +124,8 @@ function currentUser(req: Request): AuthUser {
  * anyone reaching it without students:manage is a teacher.
  */
 function assertSubjectAccess(user: AuthUser, teacherId: string | null): void {
-  // Holding the permission is not the same as being allowed this subject: a
-  // teacher has attendance:mark for their own classes only. Only a role that
-  // may manage anyone's students is exempt from the ownership rule.
-  if (can(user.role, 'students:manage')) return
-  if (teacherId !== user.id) {
-    throw forbidden('You can only manage attendance for subjects you teach.')
-  }
+  if (canManageSubject(user.role, user.id, teacherId)) return
+  throw forbidden('You can only manage attendance for subjects you teach.')
 }
 
 interface SubjectRef {
