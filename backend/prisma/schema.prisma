@@ -59,6 +59,34 @@ enum RegistrationStatus {
   CANCELLED
 }
 
+/// Where an application has got to.
+///
+/// SUBMITTED is what the applicant reaches; everything after it is the office's
+/// doing. WITHDRAWN exists so a cancelled application is distinguishable from a
+/// rejected one — conflating them loses the reason and misstates the figures.
+enum AdmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  /// Something is missing or unreadable; the applicant has been asked for it.
+  DOCUMENTS_REQUESTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  /// Accepted, fee paid, and now a student account exists.
+  ENROLLED
+}
+
+/// What a document attached to an application is meant to be.
+enum AdmissionDocumentKind {
+  MARKS_CARD
+  TRANSFER_CERTIFICATE
+  MIGRATION_CERTIFICATE
+  ID_PROOF
+  PHOTO
+  CASTE_CERTIFICATE
+  OTHER
+}
+
 /// What a piece of study material actually is. Students filter the library by
 /// this, because "last year's question paper" and "the unit 3 notes" are
 /// looked for in completely different situations.
@@ -133,6 +161,7 @@ model User {
   noticesAuthored    Notice[]            @relation("NoticeAuthor")
   materialsUploaded  StudyMaterial[]     @relation("MaterialUploadedBy")
   galleryUploaded    GalleryImage[]      @relation("GalleryUploadedBy")
+  admissionsReviewed Admission[]         @relation("AdmissionReviewedBy")
 
   @@index([role])
   @@index([program, semester, section])
@@ -162,6 +191,7 @@ model Stream {
   classGroups ClassGroup[]
   students    User[]          @relation("StudentStream")
   materials   StudyMaterial[]
+  admissions  Admission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -248,6 +278,116 @@ model StudyMaterial {
   @@index([subjectId])
   @@index([kind])
   @@map("study_materials")
+}
+
+// ------------------------------------------------------------ admissions ----
+
+/// An application to join the college.
+///
+/// Written by members of the public who have no account — this is the only
+/// table in the schema an anonymous request can insert into. Everything about
+/// its shape assumes that: the applicant is identified by what they typed, not
+/// by a user row, and none of it is trusted until the office verifies it.
+///
+/// Deliberately NOT a User. An applicant is not a student and may never become
+/// one; giving them an account at this point would put strangers in the same
+/// table as staff and students, inside every query that assumes otherwise.
+model Admission {
+  id String @id @default(cuid())
+
+  /// Human-readable, quoted over the phone and printed on paperwork —
+  /// "ADM26-0001". Sequential per year so the office can see intake at a
+  /// glance; generated in the handler because a cuid is unquotable.
+  applicationNo String @unique
+
+  // --- the applicant ---
+  name        String
+  email       String
+  phone       String
+  dateOfBirth DateTime? @db.Date
+  address     String?
+
+  guardianName  String?
+  guardianPhone String?
+
+  // --- what they are applying for ---
+  /// Nullable and paired with the free-text name below: a stream can be
+  /// deleted or renamed years after an application, and an application must
+  /// still say what it was for.
+  streamId      String?
+  stream        Stream? @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  /// What the applicant chose, captured as text at the time of applying.
+  programmeName String
+
+  // --- previous education, as claimed ---
+  qualifyingExam  String?
+  boardUniversity String?
+  yearOfPassing   Int?
+  /// Stored as text, not a number. Boards report "87.5%", "A1", "9.2 CGPA"
+  /// and "First Class" — coercing those into a float loses the distinction
+  /// and invents precision nobody supplied.
+  marksObtained String?
+
+  status AdmissionStatus @default(SUBMITTED)
+
+  /// The office's own notes. Never shown to the applicant.
+  reviewNotes  String?
+  reviewedById String?
+  reviewedBy   User?     @relation("AdmissionReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+
+  documents AdmissionDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// The office works a queue filtered by status, newest first.
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("admissions")
+}
+
+/// One row per intake year, holding the last application number issued.
+///
+/// Exists so the number can be produced by a single atomic statement rather
+/// than by reading the existing rows and adding one. The precedent in this
+/// codebase — `nextStudentCode` in academics.routes.ts — scans every matching
+/// row and reduces in JS, which is fine on a staff-only route bounded by real
+/// students. On an endpoint the public can call, it becomes O(n) work per
+/// insert where the SUBMITTER chooses n, sharing a connection pool of one; and
+/// two submissions arriving together read the same value and collide on the
+/// unique index, telling a real applicant their application number is taken.
+model AdmissionCounter {
+  year Int @id
+  /// Last issued. `UPDATE ... RETURNING` increments and reads in one step.
+  seq  Int @default(0)
+
+  @@map("admission_counters")
+}
+
+/// A file attached to an application — a marks card, an ID, a photograph.
+///
+/// A table rather than a handful of URL columns on Admission: an applicant may
+/// hold three marks cards and one photograph, or none at all, and fixed columns
+/// would force both a guess about how many and a migration every time it was
+/// wrong.
+model AdmissionDocument {
+  id          String                @id @default(cuid())
+  admissionId String
+  kind        AdmissionDocumentKind @default(OTHER)
+
+  fileUrl String
+  /// The applicant's original filename, kept for the office to recognise it.
+  /// Never used to build a storage path — see lib/storage.ts.
+  fileName String?
+  fileSize Int?
+
+  createdAt DateTime @default(now())
+
+  admission Admission @relation(fields: [admissionId], references: [id], onDelete: Cascade)
+
+  @@index([admissionId])
+  @@map("admission_documents")
 }
 
 // -------------------------------------------------------------- gallery ----

@@ -41,6 +41,16 @@ const schema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   SUPABASE_MEDIA_BUCKET: z.string().min(1).default('media'),
+  /**
+   * A SEPARATE, PRIVATE bucket for admission documents. No default on purpose.
+   *
+   * These are identity documents and marks cards belonging to applicants, many
+   * of them minors. SUPABASE_MEDIA_BUCKET is public by design — event covers
+   * and gallery photographs are meant to be world-readable — and defaulting
+   * this to it, or falling back to it when unset, is how a scan of someone's
+   * ID ends up permanently public. Unset means the upload path refuses to run.
+   */
+  SUPABASE_ADMISSIONS_BUCKET: z.string().min(1).optional(),
 })
 
 const parsed = schema.safeParse(process.env)

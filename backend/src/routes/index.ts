@@ -9,6 +9,7 @@ import progressRoutes from './progress.routes'
 import mediaRoutes from './media.routes'
 import materialRoutes from './materials.routes'
 import galleryRoutes from './gallery.routes'
+import admissionRoutes from './admissions.routes'
 import {
   streamRoutes,
   classGroupRoutes,
@@ -29,6 +30,7 @@ router.use('/progress', progressRoutes)
 router.use('/media', mediaRoutes)
 router.use('/materials', materialRoutes)
 router.use('/gallery', galleryRoutes)
+router.use('/admissions', admissionRoutes)
 router.use('/streams', streamRoutes)
 router.use('/classes', classGroupRoutes)
 router.use('/periods', periodRoutes)

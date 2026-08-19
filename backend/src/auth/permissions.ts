@@ -49,6 +49,12 @@ export type Permission =
   | 'gallery:write'
   | 'media:upload'
 
+  // --- admissions ---
+  /** Read admission applications, including applicants' personal details. */
+  | 'admissions:read'
+  /** Change an application's status and record review notes. */
+  | 'admissions:manage'
+
   // --- academic structure and people ---
   /** Streams, class groups, the period timetable. */
   | 'academics:manage'
@@ -78,6 +84,8 @@ const SUPER_ADMIN: readonly Permission[] = [
   'materials:write',
   'gallery:write',
   'media:upload',
+  'admissions:read',
+  'admissions:manage',
   'academics:manage',
   'students:read',
   'students:manage',
@@ -129,7 +137,11 @@ const CONTENT_ADMIN: readonly Permission[] = [
  * so this role gets no access to student records either. `media:upload` is
  * included because reviewing an application means handling its attachments.
  */
-const ADMISSIONS_OFFICER: readonly Permission[] = ['media:upload']
+const ADMISSIONS_OFFICER: readonly Permission[] = [
+  'admissions:read',
+  'admissions:manage',
+  'media:upload',
+]
 
 /** A student's own data is reached by ownership, never by permission. */
 const STUDENT: readonly Permission[] = []
