@@ -41,6 +41,11 @@ import type {
   GalleryImage,
   GalleryImageInput,
   GalleryAlbum,
+  Admission,
+  AdmissionListItem,
+  AdmissionStatus,
+  AdmissionApplicationInput,
+  AdmissionSubmitResult,
   MaterialKind,
   RegisterInput,
   SaveProgressInput,
@@ -461,6 +466,47 @@ export class ApiClient {
       this.request<{ id: string; attendanceRecordsDeleted: number }>(`/students/${id}`, {
         method: 'DELETE',
       }),
+  }
+
+  // --------------------------------------------------------- admissions ----
+
+  admissions = {
+    /**
+     * Public. Sends multipart so documents can ride along with the form in one
+     * request — there is no second, token-authenticated upload step for an
+     * applicant to get wrong or for an attacker to abuse separately.
+     */
+    submit: (input: AdmissionApplicationInput, documents: Blob[] = []) => {
+      const form = new FormData()
+      for (const [key, value] of Object.entries(input)) {
+        if (value !== undefined && value !== null && value !== '') {
+          form.append(key, String(value))
+        }
+      }
+      for (const file of documents) {
+        form.append('documents', file, (file as File).name ?? 'document')
+      }
+      return this.request<AdmissionSubmitResult>('/admissions', {
+        method: 'POST',
+        body: form,
+        anonymous: true,
+        // Uploads over a slow connection outlast the default.
+        timeoutMs: 120_000,
+      })
+    },
+
+    list: (query?: {
+      status?: AdmissionStatus
+      q?: string
+      streamId?: string
+      page?: number
+      limit?: number
+    }) => this.paginated<AdmissionListItem>('/admissions', { query }),
+
+    get: (id: string) => this.request<Admission>(`/admissions/${id}`),
+
+    review: (id: string, input: { status?: AdmissionStatus; reviewNotes?: string | null }) =>
+      this.request<AdmissionListItem>(`/admissions/${id}`, { method: 'PATCH', body: input }),
   }
 
   // ------------------------------------------------------------ gallery ----

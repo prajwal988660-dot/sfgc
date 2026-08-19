@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   Images,
   Megaphone,
+  UserRound,
   Users,
 } from 'lucide-react'
 
@@ -39,6 +40,12 @@ const CARDS = [
     icon: Images,
     title: 'Gallery',
     blurb: 'Photographs shown on the public website, grouped into albums.',
+  },
+  {
+    href: '/admin/admissions',
+    icon: UserRound,
+    title: 'Admissions',
+    blurb: 'Applications from the website — review, add notes and record a decision.',
   },
   {
     href: '/admin/notices',

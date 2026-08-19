@@ -523,6 +523,96 @@ export interface StudyMaterialInput {
   isPublished?: boolean
 }
 
+// ------------------------------------------------------------ admissions ----
+
+export type AdmissionStatus =
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'DOCUMENTS_REQUESTED'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'WITHDRAWN'
+  | 'ENROLLED'
+
+export type AdmissionDocumentKind =
+  | 'MARKS_CARD'
+  | 'TRANSFER_CERTIFICATE'
+  | 'MIGRATION_CERTIFICATE'
+  | 'ID_PROOF'
+  | 'PHOTO'
+  | 'CASTE_CERTIFICATE'
+  | 'OTHER'
+
+/** One row of the office's queue. Deliberately without reviewNotes. */
+export interface AdmissionListItem {
+  id: string
+  applicationNo: string
+  name: string
+  email: string
+  phone: string
+  programmeName: string
+  status: AdmissionStatus
+  createdAt: string
+  stream: { id: string; code: string; name: string } | null
+  documentCount: number
+}
+
+export interface AdmissionDocument {
+  id: string
+  kind: AdmissionDocumentKind
+  fileName: string | null
+  fileSize: number | null
+  /**
+   * A signed link valid for a few minutes, generated when the record is
+   * opened. Null when document storage is not configured. Never a permanent
+   * URL — these are identity documents.
+   */
+  fileUrl: string | null
+}
+
+/** The full record. `reviewNotes` is the office's private assessment. */
+export interface Admission extends AdmissionListItem {
+  dateOfBirth: string | null
+  address: string | null
+  guardianName: string | null
+  guardianPhone: string | null
+  qualifyingExam: string | null
+  boardUniversity: string | null
+  yearOfPassing: number | null
+  marksObtained: string | null
+  reviewNotes: string | null
+  decidedAt: string | null
+  reviewedBy: { id: string; name: string } | null
+  documents: AdmissionDocument[]
+}
+
+/** What the public form sends. */
+export interface AdmissionApplicationInput {
+  name: string
+  email: string
+  phone: string
+  dateOfBirth?: string
+  address?: string
+  guardianName?: string
+  guardianPhone?: string
+  streamId?: string
+  programmeName: string
+  qualifyingExam?: string
+  boardUniversity?: string
+  yearOfPassing?: number
+  marksObtained?: string
+}
+
+/**
+ * All an applicant gets back. No row id and no document URLs — returning a
+ * storage URL to an anonymous caller would make the endpoint usable as file
+ * hosting on the college's own infrastructure.
+ */
+export interface AdmissionSubmitResult {
+  applicationNo: string
+  message: string
+}
+
 // --------------------------------------------------------------- gallery ----
 
 /** A photograph on the public site. */

@@ -13,6 +13,7 @@ import {
   LogOut,
   Megaphone,
   Images,
+  UserRound,
   Users,
 } from 'lucide-react'
 
@@ -29,6 +30,7 @@ const NAV = [
   { href: '/admin/students', label: 'Students', icon: Users },
   { href: '/admin/library', label: 'Library', icon: BookOpen },
   { href: '/admin/gallery', label: 'Gallery', icon: Images },
+  { href: '/admin/admissions', label: 'Admissions', icon: UserRound },
   { href: '/admin/notices', label: 'Notices', icon: Megaphone },
   { href: '/admin/events', label: 'Events', icon: CalendarDays },
   { href: '/admin/media', label: 'Pictures', icon: ImageIcon },

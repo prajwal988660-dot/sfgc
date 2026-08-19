@@ -129,11 +129,16 @@ export default function AdmissionsPage() {
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              {/* Applying is the action this page exists for, so it leads.
+                  Enquiring stays available for anyone not ready to commit. */}
               <Button asChild size="lg" variant="gold">
-                <Link href="/contact">
-                  Enquire about admissions
+                <Link href="/admissions/apply">
+                  Apply online
                   <ArrowRight aria-hidden="true" />
                 </Link>
+              </Button>
+              <Button asChild size="lg" variant="glass">
+                <Link href="/contact">Enquire about admissions</Link>
               </Button>
 
               <Button asChild size="lg" variant="glass">
