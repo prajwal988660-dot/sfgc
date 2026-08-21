@@ -111,8 +111,8 @@ export default function LoginScreen() {
               ) : null}
 
               <AppInput
-                label="Register number or email"
-                placeholder="SFGC101 or you@sfgc.ac.in"
+                label="Student ID, register number or email"
+                placeholder="BCA25001, SFGC101 or you@sfgc.ac.in"
                 value={identifier}
                 onChangeText={(text) => {
                   setIdentifier(text)

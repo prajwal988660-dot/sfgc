@@ -166,15 +166,24 @@ router.post(
   asyncHandler(async (req, res) => {
     const { identifier, password } = req.body as LoginBody
 
-    // One identifier, three possible columns. Case-insensitive so a phone
+    // One identifier, four possible columns. Case-insensitive so a phone
     // keyboard capitalising the first letter does not fail an otherwise
     // correct login.
+    //
+    // studentCode was missing here and it mattered. Every student has both a
+    // registerNo (SFGC101) and a studentCode (BCA25001), and all 40 differ.
+    // The student code is the per-stream id the college actually uses, it is
+    // what db:rotate-demo prints on the credential slip, and it is @unique so
+    // matching on it is unambiguous — but it was not one of the columns this
+    // query looked at, so every one of those slips failed at the login screen
+    // with "invalid credentials".
     const record = await prisma.user.findFirst({
       where: {
         OR: [
           { email: { equals: identifier, mode: 'insensitive' } },
           { registerNo: { equals: identifier, mode: 'insensitive' } },
           { employeeId: { equals: identifier, mode: 'insensitive' } },
+          { studentCode: { equals: identifier, mode: 'insensitive' } },
         ],
       },
       select: { ...publicUserSelect, passwordHash: true },
