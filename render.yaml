@@ -88,6 +88,39 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
 
+      # ---------------------------------------------------------------------
+      # Supabase Storage. Both buckets already exist in the project:
+      #   media       public,  8 MB, jpeg/png/webp/gif/avif
+      #   admissions  private, 4 MB, jpeg/png/webp/pdf
+      # Those limits mirror storage.ts so the storage service enforces the same
+      # rule the API does — a stolen service-role key still cannot put a 2 GB
+      # file or an SVG in a public bucket. SVG is excluded from both on purpose:
+      # it is a script container, and one served from the storage origin
+      # executes there.
+      #
+      # The project URL and the bucket name are not secrets — the URL is in
+      # every image the site serves. Only the service-role key is, and it stays
+      # dashboard-only below.
+      - key: SUPABASE_URL
+        value: https://omqvpahtcuwxpvdnxjlq.supabase.co
+
+      # Without this, uploadAdmissionDocument() refuses to run. It deliberately
+      # does NOT fall back to the public media bucket: applicants' documents are
+      # identity papers, and the fallback would put them somewhere anyone can
+      # read by guessing a URL.
+      - key: SUPABASE_ADMISSIONS_BUCKET
+        value: admissions
+
+      # SUPABASE_MEDIA_BUCKET is omitted deliberately — config/env.ts defaults
+      # it to 'media', which is the bucket that exists.
+
+      # THE ONLY REMAINING SECRET. Supabase dashboard -> Project Settings ->
+      # API -> service_role. It bypasses row-level security completely, which
+      # is why uploads go through this API rather than straight from a browser.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # ---------------------------------------------------------------------
+
       # Browser origins allowed to call the API. The mobile apps send no Origin
       # header and are always allowed — they are authorised by their JWT, not
       # their origin.
