@@ -205,6 +205,44 @@ GRANT SELECT, INSERT, UPDATE ON
 -- _subjectenrollment and every statement errors with "relation does not exist".
 GRANT SELECT, INSERT ON sfgc_platform."_SubjectEnrollment" TO sfgc_api;
 
+-- Tier 4 -- tables that did not exist when this script was first written.
+--
+-- The gallery and admissions features landed after it, and the script's own
+-- verification query at the bottom is what caught them: on first application it
+-- reported five tables with RLS off, no policy and no grant at all. Switching
+-- DATABASE_URL at that point would have taken down the public admissions form
+-- and the whole gallery with "permission denied for table admissions".
+--
+-- Recorded here rather than quietly folded into the tiers above, because the
+-- lesson generalises: every new table needs a line in this file AND a line in
+-- the app_tables array below, and nothing enforces that except the check query.
+
+-- Full CRUD. gallery.routes.ts:158 is a live DELETE route.
+GRANT SELECT, INSERT, UPDATE, DELETE ON sfgc_platform.gallery_images TO sfgc_api;
+
+-- No DELETE. admissions.routes.ts exposes create/read/update only -- an
+-- application is withdrawn by moving its status, never by removing the row,
+-- which is what keeps the application number sequence meaningful.
+GRANT SELECT, INSERT, UPDATE ON sfgc_platform.admissions TO sfgc_api;
+
+-- Documents are only ever written as a nested create alongside their
+-- admission (admissions.routes.ts:301) and read back with it. Deleting one is
+-- not an operation the API has; the Supabase objects are cleaned up through
+-- removeAdmissionDocuments(), which is storage-side and needs no SQL privilege.
+GRANT SELECT, INSERT ON sfgc_platform.admission_documents TO sfgc_api;
+
+-- Both counters are driven by the same statement shape:
+--   INSERT INTO ... VALUES (...) ON CONFLICT (...) DO UPDATE SET seq = seq + 1
+--   RETURNING seq
+-- (admissions.routes.ts:163, academics.routes.ts:442). That needs INSERT for
+-- the first row of a year or prefix, UPDATE for every subsequent one, and
+-- SELECT because RETURNING reads the column back. Dropping any of the three
+-- breaks admission-number and student-code allocation.
+GRANT SELECT, INSERT, UPDATE ON
+  sfgc_platform.admission_counters,
+  sfgc_platform.student_code_counters
+  TO sfgc_api;
+
 -- KNOWN TRADE-OFF, recorded so it is a decision and not an accident:
 -- adding "unenroll a student", "cancel a registration" or "delete an
 -- attendance record" later will fail in production with
@@ -301,7 +339,12 @@ DECLARE
   app_tables constant text[] := ARRAY[
     'users','streams','class_groups','periods','subjects',
     'attendance','progress_cards','events','event_registrations',
-    'notices','study_materials','_SubjectEnrollment'
+    'notices','study_materials','_SubjectEnrollment',
+    -- Added with the Tier 4 grants above. Keep this array and that list in
+    -- step: a table granted but missing here gets no policy, and once RLS is
+    -- enabled schema-wide that reads as an inconsistency the check query flags.
+    'gallery_images','admissions','admission_documents',
+    'admission_counters','student_code_counters'
   ];
 BEGIN
   FOREACH t IN ARRAY app_tables LOOP
