@@ -15,10 +15,13 @@ import { usePathname } from 'next/navigation'
  */
 export function SiteChrome({
   header,
+  noticeBar,
   footer,
   children,
 }: {
   header: React.ReactNode
+  /** Latest-notices strip under the header (a Server Component, passed in). */
+  noticeBar?: React.ReactNode
   footer: React.ReactNode
   children: React.ReactNode
 }) {
@@ -28,6 +31,7 @@ export function SiteChrome({
   return (
     <>
       {bare ? null : header}
+      {bare ? null : noticeBar}
       <main id="main">{children}</main>
       {bare ? null : footer}
     </>

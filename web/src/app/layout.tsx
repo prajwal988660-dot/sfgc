@@ -6,6 +6,7 @@ import './globals.css'
 import { COLLEGE } from '@/content/college'
 import { SiteHeader } from '@/components/layout/site-header'
 import { SiteFooter } from '@/components/layout/site-footer'
+import { NoticeBar } from '@/components/layout/notice-bar'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import { themeInitScript } from '@/lib/theme'
 
@@ -50,7 +51,7 @@ export const metadata: Metadata = {
     title: COLLEGE.name,
     description: COLLEGE.tagline,
   },
-  icons: { icon: '/logo.webp', apple: '/logo.webp' },
+  icons: { icon: COLLEGE.emblem, apple: COLLEGE.emblem },
   robots: { index: true, follow: true },
 }
 
@@ -74,20 +75,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100]
-                     focus:rounded-full focus:bg-primary focus:px-5 focus:py-2.5 focus:text-sm
+                     focus:rounded-md focus:bg-primary focus:px-5 focus:py-2.5 focus:text-sm
                      focus:font-semibold focus:text-primary-foreground"
         >
           Skip to content
         </a>
 
-        <SiteChrome header={<SiteHeader />} footer={<SiteFooter />}>
+        <SiteChrome header={<SiteHeader />} noticeBar={<NoticeBar />} footer={<SiteFooter />}>
           {children}
         </SiteChrome>
 
         <Toaster
           position="top-center"
           richColors
-          toastOptions={{ style: { borderRadius: '0.9rem' } }}
+          toastOptions={{ style: { borderRadius: '0.375rem' } }}
         />
       </body>
     </html>

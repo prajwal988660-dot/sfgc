@@ -384,8 +384,11 @@ export class ApiClient {
   // ---------------------------------------------------------- notices ----
 
   notices = {
-    list: (query?: { category?: string; q?: string; page?: number; limit?: number }) =>
-      this.paginated<Notice>('/notices', { query }),
+    list: (
+      query?: { category?: string; q?: string; page?: number; limit?: number },
+      /** Next.js cache hint for server renders, e.g. `{ revalidate: 60 }`. */
+      cacheOpts?: { revalidate?: number },
+    ) => this.paginated<Notice>('/notices', { query, ...cacheOpts }),
 
     get: (id: string) => this.request<Notice>(`/notices/${id}`),
 
