@@ -113,10 +113,9 @@ export default function AboutPage() {
   return (
     <>
       {/* ---------------------------------------------------------- hero -- */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-maroon-900 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+      <section className="page-banner">
 
-        <div className="container relative py-20 md:py-28">
+        <div className="container relative py-12 md:py-16">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-primary-100">
               <li>
@@ -134,7 +133,7 @@ export default function AboutPage() {
           </nav>
 
           <Reveal className="mt-8 max-w-3xl">
-            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">
+            <span className="eyebrow text-gold-200 dark:text-gold-200">
               {COLLEGE.tagline}
             </span>
             <h1 className="heading-xl mt-6 text-white">About the College</h1>
@@ -254,15 +253,11 @@ export default function AboutPage() {
           </Reveal>
 
           <Reveal className="mx-auto mt-12 max-w-4xl" delay={0.1} amount={0.15}>
-            <figure className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 via-primary-800 to-maroon-900 px-6 py-12 text-white shadow-lift sm:px-12 md:py-16">
-              <div
-                className="pointer-events-none absolute inset-0 bg-hero-radial"
-                aria-hidden="true"
-              />
+            <figure className="relative overflow-hidden rounded-lg border-l-4 border-maroon-600 bg-primary-900 px-6 py-12 text-white sm:px-12 md:py-16">
               <Quote
                 aria-hidden="true"
                 strokeWidth={1}
-                className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-gold/20"
+                className="pointer-events-none absolute right-6 top-6 h-16 w-16 text-white/10"
               />
 
               <blockquote className="relative">
@@ -368,7 +363,7 @@ export default function AboutPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* The founding year is set in type rather than counted up — a
                     year with a thousands separator reads as a quantity. */}
-                <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-primary-900 to-primary-950 p-6 text-white sm:col-span-2">
+                <div className="rounded-2xl border border-gold/30 bg-primary-900 p-6 text-white sm:col-span-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-200">
                     Serving since
                   </p>

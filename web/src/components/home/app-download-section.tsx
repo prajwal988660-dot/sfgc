@@ -134,7 +134,7 @@ export function AppDownloadSection() {
             <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
             Mobile apps
           </span>
-          <h2 className="heading-lg mt-5">Take the college with you</h2>
+          <h2 className="heading-lg mt-5">SFGC Mobile Apps</h2>
           <p className="lede mt-4">
             Two free Android apps, built for {"SFGC"}. Attendance, marks, events and
             official notices — no more relying on a group chat.

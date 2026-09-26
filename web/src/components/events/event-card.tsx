@@ -62,7 +62,7 @@ export function EventCard({ event }: { event: Event }) {
       : 'Registration closed'
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lift focus-within:-translate-y-1 focus-within:shadow-lift">
+    <Card className="group relative flex h-full flex-col overflow-hidden transition-all duration-300 hover:shadow-card focus-within:shadow-card">
       {/* Cover band — colour is derived from the category, not stored per event. */}
       <div
         className={cn(

@@ -111,17 +111,8 @@ export default async function EventsPage({
 
   return (
     <>
-      <section className="relative overflow-hidden bg-primary-950 pb-16 pt-28 text-white md:pb-20 md:pt-36">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,rgba(42,99,184,.45),transparent_60%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_100%_100%,rgba(138,31,64,.4),transparent_60%)]"
-        />
-
-        <div className="container relative">
+      <section className="page-banner">
+        <div className="container relative py-12 md:py-16">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-white/70">
               <li>
@@ -139,7 +130,7 @@ export default async function EventsPage({
           </nav>
 
           <div className="mt-8 max-w-3xl">
-            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200 dark:text-gold-200">
+            <span className="eyebrow text-gold-200 dark:text-gold-200">
               <CalendarDays className="size-3.5" aria-hidden="true" />
               College calendar
             </span>

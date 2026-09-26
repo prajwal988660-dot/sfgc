@@ -41,7 +41,7 @@
     --input: 213 25% 89%;
     --ring: 213 72% 30%;
 
-    --radius: 0.75rem;
+    --radius: 0.375rem;
   }
 
   .dark {
@@ -128,15 +128,24 @@
     @apply border border-white/15 bg-primary-950/50 backdrop-blur-xl backdrop-saturate-150;
   }
 
+  /* Title band at the top of every inner page: solid navy, maroon rule. */
+  .page-banner {
+    @apply relative border-b-4 border-maroon-700 bg-primary-900 text-white;
+  }
+
+  .page-banner .heading-xl {
+    @apply text-3xl sm:text-4xl lg:text-5xl;
+  }
+
   /* Section rhythm — one class so every band on the page breathes alike. */
   .section {
     @apply py-20 md:py-28;
   }
 
+  /* Section label: plain small caps with a short rule, not a coloured pill. */
   .eyebrow {
-    @apply inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10
-           px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-gold-700
-           dark:text-gold-300;
+    @apply inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em]
+           text-maroon-700 before:h-px before:w-8 before:bg-current dark:text-maroon-300;
   }
 
   .heading-xl {

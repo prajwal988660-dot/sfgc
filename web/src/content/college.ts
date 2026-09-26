@@ -26,6 +26,8 @@ export const COLLEGE = {
   established: 1930,
   trust: 'Seshadripuram Educational Trust (SET)',
   website: 'https://www.sfgc.ac.in/',
+  /** Brand mark for the header, footer and favicon. Replace the file with the official crest. */
+  emblem: '/emblem.svg',
   mapEmbed:
     'https://www.google.com/maps?q=Seshadripuram+First+Grade+College+Yelahanka+Bengaluru&output=embed',
   mapLink:
@@ -108,10 +110,10 @@ export const PRINCIPAL = {
 
 /** Animated counters on the homepage. */
 export const STATS = [
-  { value: 1930, label: 'Established', suffix: '', decimals: 0 },
-  { value: 20000, label: 'Students across SET', suffix: '+', decimals: 0 },
-  { value: 24, label: 'SET Institutions', suffix: '', decimals: 0 },
-  { value: 3.5, label: 'Acre Campus', suffix: '', decimals: 1 },
+  { value: 1930, label: 'Established', suffix: '', decimals: 0, isYear: true },
+  { value: 20000, label: 'Students across SET', suffix: '+', decimals: 0, isYear: false },
+  { value: 24, label: 'SET Institutions', suffix: '', decimals: 0, isYear: false },
+  { value: 3.5, label: 'Acre Campus', suffix: '', decimals: 1, isYear: false },
 ] as const
 
 export const PLACEMENT_STATS = [

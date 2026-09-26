@@ -66,16 +66,8 @@ export function SiteHeader() {
   const drawerCloseRef = React.useRef<HTMLButtonElement>(null)
   const drawerRef = React.useRef<HTMLDivElement>(null)
 
-  /**
-   * Only the homepage puts a dark hero behind the bar, so only there does the
-   * navbar start transparent with light type. Every other route starts frosted,
-   * which keeps the links legible against a white page from the first pixel.
-   */
-  const isHome = pathname === '/'
-  const overlay = isHome && !scrolled
-
   React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
+    const onScroll = () => setScrolled(window.scrollY > 124)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -167,13 +159,9 @@ export function SiteHeader() {
 
   const navLinkClass = (active: boolean) =>
     cn(
-      'link-underline relative rounded-sm py-1 text-[0.9rem] font-semibold tracking-tight',
-      'transition-colors focus-visible:outline-none focus-visible:ring-2',
-      overlay
-        ? 'text-white/85 hover:text-white focus-visible:ring-white'
-        : 'text-primary-900/75 hover:text-primary-900 focus-visible:ring-primary dark:text-white/75 dark:hover:text-white',
-      active && 'after:w-full',
-      active && (overlay ? 'text-white' : 'text-primary-900 dark:text-white'),
+      'inline-flex items-center border-b-2 px-4 text-sm font-semibold text-white/90 transition-colors',
+      'hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white',
+      active ? 'border-gold bg-white/10 text-white' : 'border-transparent',
     )
 
   const activeParentLabel = NAV.find(
@@ -185,220 +173,73 @@ export function SiteHeader() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 lg:-top-9',
-        // On the homepage the header is pulled out of flow so the hero renders
-        // behind it. Elsewhere it occupies its own band above the page.
-        isHome && '-mb-16 lg:-mb-[7.25rem]',
+        // Sticky with a negative offset: the utility bar and brand row scroll
+        // away and the navy menu bar pins to the top. Below lg there is no
+        // menu bar, so the (shorter) brand row pins instead.
+        'sticky top-0 z-50 bg-background lg:-top-[7.75rem]',
+        scrolled && 'shadow-card',
       )}
     >
-      {/* Utility bar — scrolls away, the nav below it stays. */}
+      {/* Utility bar */}
       <div className="hidden h-9 bg-primary-950 text-white/75 lg:block">
-        <div className="container flex h-full items-center justify-between text-[0.72rem]">
+        <div className="container flex h-full items-center justify-between text-[0.75rem]">
           <div className="flex items-center gap-6">
             <a
               href={COLLEGE.phoneHref}
               className="inline-flex items-center gap-1.5 rounded-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              <Phone className="h-3.5 w-3.5 text-gold-300" aria-hidden="true" />
+              <Phone className="h-3.5 w-3.5" aria-hidden="true" />
               {COLLEGE.phone}
             </a>
             <a
               href={`mailto:${COLLEGE.email}`}
               className="inline-flex items-center gap-1.5 rounded-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              <Mail className="h-3.5 w-3.5 text-gold-300" aria-hidden="true" />
+              <Mail className="h-3.5 w-3.5" aria-hidden="true" />
               {COLLEGE.email}
             </a>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 font-semibold uppercase tracking-[0.12em] text-gold-200">
+          <div className="flex items-center gap-5">
+            <span className="font-medium">
               {COLLEGE.accreditation}
-            </span>
-            <span className="rounded-full border border-white/15 px-2.5 py-0.5 font-semibold uppercase tracking-[0.12em] text-white/70">
+              <span className="px-2 text-white/35" aria-hidden="true">|</span>
               {COLLEGE.iso}
             </span>
+            <ThemeToggle tone="inverse" />
           </div>
         </div>
       </div>
 
-      {/* Nav row */}
-      <div
-        className={cn(
-          'transition-[background-color,border-color,box-shadow] duration-300 ease-out',
-          overlay
-            ? 'border-b border-transparent bg-gradient-to-b from-primary-950/70 via-primary-950/35 to-transparent'
-            : 'glass border-x-0 border-t-0 border-b border-border/70',
-          scrolled && !overlay && 'shadow-glass',
-        )}
-      >
-        <div className="container flex h-16 items-center justify-between gap-4 lg:h-20">
+      {/* Brand row */}
+      <div className="border-b border-border">
+        <div className="container flex h-16 items-center justify-between gap-4 lg:h-[5.5rem]">
           <Link
             href="/"
-            className={cn(
-              'group flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2',
-              overlay ? 'focus-visible:ring-white' : 'focus-visible:ring-primary',
-            )}
+            className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:gap-4"
           >
             <Image
-              src="/logo.webp"
-              alt={COLLEGE.name}
-              width={44}
-              height={44}
+              src={COLLEGE.emblem}
+              alt=""
+              width={64}
+              height={64}
               priority
-              className={cn(
-                'h-10 w-10 rounded-xl object-cover ring-1 transition-transform duration-300 group-hover:scale-[1.04] lg:h-11 lg:w-11',
-                overlay ? 'ring-white/30' : 'ring-primary/15',
-              )}
+              className="h-11 w-11 shrink-0 lg:h-16 lg:w-16"
             />
-            <span
-              className={cn(
-                'font-display text-lg font-bold leading-none tracking-tight sm:hidden',
-                overlay ? 'text-white' : 'text-primary-900 dark:text-white',
-              )}
-            >
+            <span className="font-display text-lg font-bold leading-none text-primary-900 sm:hidden dark:text-white">
               {COLLEGE.short}
             </span>
-            <span className="hidden flex-col gap-1 sm:flex">
-              <span
-                className={cn(
-                  'font-display text-[0.95rem] font-bold leading-none tracking-tight lg:text-[1.05rem]',
-                  overlay ? 'text-white' : 'text-primary-900 dark:text-white',
-                )}
-              >
+            <span className="hidden min-w-0 flex-col gap-1.5 sm:flex">
+              <span className="font-display text-lg font-bold leading-none tracking-tight text-primary-900 lg:text-[1.6rem] dark:text-white">
                 {COLLEGE.name}
               </span>
-              <span
-                className={cn(
-                  'text-[0.68rem] font-medium leading-none tracking-[0.06em]',
-                  overlay ? 'text-white/65' : 'text-muted-foreground',
-                )}
-              >
-                {COLLEGE.location} · Est. {COLLEGE.established}
+              <span className="truncate text-[0.7rem] font-medium leading-snug text-muted-foreground lg:text-xs">
+                {COLLEGE.location} · Est. {COLLEGE.established} · A unit of {COLLEGE.trust}
               </span>
             </span>
           </Link>
 
-          <nav aria-label="Primary" className="hidden lg:block">
-            <ul className="flex items-center gap-7">
-              {NAV.map((item) => {
-                const children = item.children
-                const active = isSectionActive(pathname, item)
-
-                if (!children?.length) {
-                  return (
-                    <li key={item.label}>
-                      <Link
-                        href={item.href}
-                        aria-current={active ? 'page' : undefined}
-                        className={navLinkClass(active)}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  )
-                }
-
-                const panelId = panelIdFor(item.label)
-                const isOpen = openLabel === item.label
-                const note = PANEL_NOTE[item.label]
-
-                return (
-                  <li
-                    key={item.label}
-                    className="relative"
-                    onMouseEnter={() => openPanel(item.label)}
-                    onMouseLeave={schedulePanelClose}
-                    onFocus={() => openPanel(item.label)}
-                    onBlur={handleItemBlur}
-                  >
-                    <button
-                      type="button"
-                      ref={(node) => {
-                        triggerRefs.current[item.label] = node
-                      }}
-                      // Disclosure semantics, not a menu: the panel holds links,
-                      // so aria-expanded + aria-controls is the correct pairing.
-                      aria-expanded={isOpen}
-                      aria-controls={panelId}
-                      aria-current={
-                        isRouteActive(pathname, item.href) ? 'page' : undefined
-                      }
-                      onClick={() => setOpenLabel(isOpen ? null : item.label)}
-                      className={cn(navLinkClass(active), 'inline-flex items-center gap-1')}
-                    >
-                      {item.label}
-                      <ChevronDown
-                        aria-hidden="true"
-                        className={cn(
-                          'h-3.5 w-3.5 transition-transform duration-200',
-                          isOpen && 'rotate-180',
-                        )}
-                      />
-                    </button>
-
-                    <AnimatePresence>
-                      {isOpen ? (
-                        <motion.div
-                          key={panelId}
-                          id={panelId}
-                          initial={{ opacity: 0, y: 10, x: '-50%' }}
-                          animate={{ opacity: 1, y: 0, x: '-50%' }}
-                          exit={{ opacity: 0, y: 6, x: '-50%' }}
-                          transition={{
-                            duration: reduceMotion ? 0.12 : 0.2,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                          className="absolute left-1/2 top-full w-72 pt-4"
-                        >
-                          <div className="glass overflow-hidden rounded-2xl shadow-glass">
-                            <ul className="p-2">
-                              {children.map((child) => {
-                                // Hash links share a route, so only an exact match
-                                // counts — otherwise every "/about#…" child would
-                                // light up at once.
-                                const childActive = pathname === child.href
-                                return (
-                                  <li key={child.href}>
-                                    <Link
-                                      href={child.href}
-                                      aria-current={childActive ? 'page' : undefined}
-                                      className={cn(
-                                        'group/link flex items-center justify-between gap-3 rounded-xl px-3 py-2.5',
-                                        'text-sm font-medium text-primary-900 transition-colors',
-                                        'hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                                        'dark:text-white dark:hover:bg-white/10',
-                                        childActive && 'bg-primary/5 dark:bg-white/10',
-                                      )}
-                                    >
-                                      {child.label}
-                                      <ChevronRight
-                                        aria-hidden="true"
-                                        className="h-4 w-4 -translate-x-1 text-gold opacity-0 transition-all duration-200 group-hover/link:translate-x-0 group-hover/link:opacity-100"
-                                      />
-                                    </Link>
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                            {note ? (
-                              <p className="border-t border-border/60 bg-secondary/70 px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                                {note}
-                              </p>
-                            ) : null}
-                          </div>
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </li>
-                )
-              })}
-            </ul>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="hidden md:inline-flex" />
-
-            <Button asChild variant="gold" size="sm" className="hidden sm:inline-flex lg:h-11 lg:px-6 lg:text-sm">
+          <div className="flex shrink-0 items-center gap-2">
+            <Button asChild size="sm" className="hidden sm:inline-flex lg:h-10 lg:px-5 lg:text-sm">
               <Link href="/admissions">Apply Now</Link>
             </Button>
 
@@ -409,18 +250,114 @@ export function SiteHeader() {
               aria-label="Open navigation menu"
               aria-expanded={mobileOpen}
               aria-controls="site-mobile-menu"
-              className={cn(
-                'inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors lg:hidden',
-                'focus-visible:outline-none focus-visible:ring-2',
-                overlay
-                  ? 'border-white/25 text-white hover:bg-white/10 focus-visible:ring-white'
-                  : 'border-border text-primary-900 hover:bg-secondary focus-visible:ring-primary dark:text-white',
-              )}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-primary-900 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden dark:text-white"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Menu bar */}
+      <div className="hidden bg-primary-800 lg:block dark:bg-primary-900">
+        <nav aria-label="Primary" className="container">
+          <ul className="flex h-12 items-stretch">
+            {NAV.map((item) => {
+              const children = item.children
+              const active = isSectionActive(pathname, item)
+
+              if (!children?.length) {
+                return (
+                  <li key={item.label} className="flex">
+                    <Link
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={navLinkClass(active)}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              }
+
+              const panelId = panelIdFor(item.label)
+              const isOpen = openLabel === item.label
+              const note = PANEL_NOTE[item.label]
+
+              return (
+                <li
+                  key={item.label}
+                  className="relative flex"
+                  onMouseEnter={() => openPanel(item.label)}
+                  onMouseLeave={schedulePanelClose}
+                  onFocus={() => openPanel(item.label)}
+                  onBlur={handleItemBlur}
+                >
+                  <button
+                    type="button"
+                    ref={(node) => {
+                      triggerRefs.current[item.label] = node
+                    }}
+                    // Disclosure semantics, not a menu: the panel holds links,
+                    // so aria-expanded + aria-controls is the correct pairing.
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    aria-current={
+                      isRouteActive(pathname, item.href) ? 'page' : undefined
+                    }
+                    onClick={() => setOpenLabel(isOpen ? null : item.label)}
+                    className={cn(navLinkClass(active || isOpen), 'gap-1')}
+                  >
+                    {item.label}
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={cn(
+                        'h-3.5 w-3.5 transition-transform duration-200',
+                        isOpen && 'rotate-180',
+                      )}
+                    />
+                  </button>
+
+                  {isOpen ? (
+                    <div id={panelId} className="absolute left-0 top-full w-64">
+                      <div className="overflow-hidden rounded-b-md border border-t-0 border-border bg-background shadow-lift">
+                        <ul className="py-1">
+                          {children.map((child) => {
+                            // Hash links share a route, so only an exact match
+                            // counts — otherwise every "/about#…" child would
+                            // light up at once.
+                            const childActive = pathname === child.href
+                            return (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  aria-current={childActive ? 'page' : undefined}
+                                  className={cn(
+                                    'block border-l-2 border-transparent px-4 py-2.5 text-sm font-medium text-primary-900 transition-colors',
+                                    'hover:border-maroon-600 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
+                                    'dark:text-white dark:hover:bg-white/10',
+                                    childActive && 'border-maroon-600 bg-secondary dark:bg-white/10',
+                                  )}
+                                >
+                                  {child.label}
+                                </Link>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                        {note ? (
+                          <p className="border-t border-border bg-secondary/70 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                            {note}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
       </div>
 
       {/* Mobile drawer */}
@@ -458,13 +395,7 @@ export function SiteHeader() {
           >
             <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
               <div className="flex items-center gap-3">
-                <Image
-                  src="/logo.webp"
-                  alt=""
-                  width={36}
-                  height={36}
-                  className="h-9 w-9 rounded-lg object-cover ring-1 ring-primary/15"
-                />
+                <Image src={COLLEGE.emblem} alt="" width={36} height={36} className="h-9 w-9" />
                 <span className="flex flex-col gap-1">
                   <span className="font-display text-sm font-bold leading-none text-primary-900 dark:text-white">
                     {COLLEGE.short}
@@ -479,7 +410,7 @@ export function SiteHeader() {
                 type="button"
                 onClick={closeDrawer}
                 aria-label="Close navigation menu"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border text-primary-900 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-primary-900 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:text-white"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -556,7 +487,7 @@ export function SiteHeader() {
             </nav>
 
             <div className="border-t border-border bg-secondary/50 px-5 py-5">
-              <Button asChild variant="gold" className="w-full">
+              <Button asChild className="w-full">
                 <Link href="/admissions" onClick={closeDrawer}>
                   Apply Now
                 </Link>

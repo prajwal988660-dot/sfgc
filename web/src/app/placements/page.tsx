@@ -57,10 +57,9 @@ export default function PlacementsPage() {
   return (
     <>
       {/* ---------------------------------------------------------- hero -- */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-primary-950 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+      <section className="page-banner">
 
-        <div className="container relative py-20 md:py-28">
+        <div className="container relative py-12 md:py-16">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-primary-100">
               <li>
@@ -78,7 +77,7 @@ export default function PlacementsPage() {
           </nav>
 
           <Reveal className="mt-8 max-w-3xl" direction="up">
-            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">
+            <span className="eyebrow text-gold-200 dark:text-gold-200">
               Career &amp; Placement Cell
             </span>
             <h1 className="heading-xl mt-6 text-white">
@@ -127,7 +126,7 @@ export default function PlacementsPage() {
                   {index + 1}
                 </span>
 
-                <div className="rounded-xl border bg-card p-5 shadow-card transition-shadow hover:shadow-lift sm:p-6">
+                <div className="rounded-xl border bg-card p-5 shadow-card transition-shadow hover:shadow-card sm:p-6">
                   <h3 className="font-display text-lg font-semibold">
                     <span className="sr-only">Step {index + 1}: </span>
                     {step.title}
@@ -164,8 +163,8 @@ export default function PlacementsPage() {
                 <div
                   className="flex h-24 items-center justify-center rounded-xl border bg-card px-4
                              text-center font-display text-base font-semibold text-primary-800
-                             shadow-card transition duration-200 hover:-translate-y-0.5
-                             hover:border-gold/40 hover:shadow-lift dark:text-primary-100"
+                             shadow-card transition duration-200
+                             hover:border-primary/50 hover:shadow-card dark:text-primary-100"
                 >
                   {name}
                 </div>
@@ -178,11 +177,10 @@ export default function PlacementsPage() {
       {/* --------------------------------------------------- employer CTA -- */}
       <section className="section">
         <div className="container">
-          <Reveal className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 via-primary-800 to-maroon-900 px-6 py-14 text-center text-white sm:px-12 md:py-20">
-            <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+          <Reveal className="relative overflow-hidden rounded-3xl bg-primary-900 px-6 py-14 text-center text-white sm:px-12 md:py-20">
 
             <div className="relative mx-auto max-w-2xl">
-              <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">
+              <span className="eyebrow text-gold-200 dark:text-gold-200">
                 For employers
               </span>
               <h2 className="heading-lg mt-6 text-white">Recruit on campus</h2>

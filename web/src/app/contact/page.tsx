@@ -132,10 +132,9 @@ export default function ContactPage() {
   return (
     <>
       {/* ---------------------------------------------------------- hero -- */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-primary-950 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+      <section className="page-banner">
 
-        <div className="container relative py-20 md:py-28">
+        <div className="container relative py-12 md:py-16">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-primary-100">
               <li>
@@ -153,7 +152,7 @@ export default function ContactPage() {
           </nav>
 
           <Reveal className="mt-8 max-w-3xl" direction="up">
-            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">Get in touch</span>
+            <span className="eyebrow text-gold-200 dark:text-gold-200">Get in touch</span>
             <h1 className="heading-xl mt-6 text-white">Contact the college</h1>
             <p className="lede mt-6 max-w-2xl text-primary-100">
               Admissions, placements, alumni, or a question about a programme — write to us, call
@@ -513,11 +512,10 @@ export default function ContactPage() {
       {/* -------------------------------------------------- admissions CTA -- */}
       <section className="section pt-0">
         <div className="container">
-          <Reveal className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 via-primary-800 to-maroon-900 px-6 py-14 text-center text-white sm:px-12 md:py-20">
-            <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+          <Reveal className="relative overflow-hidden rounded-3xl bg-primary-900 px-6 py-14 text-center text-white sm:px-12 md:py-20">
 
             <div className="relative mx-auto max-w-2xl">
-              <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">
+              <span className="eyebrow text-gold-200 dark:text-gold-200">
                 Admissions 2026–27
               </span>
               <h2 className="heading-lg mt-6 text-white">Thinking of joining us?</h2>

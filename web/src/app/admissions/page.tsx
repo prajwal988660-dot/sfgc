@@ -72,7 +72,7 @@ function ProgrammeGrid({ items }: { items: readonly Programme[] }) {
           <Card className="flex h-full flex-col hover:shadow-lift">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <Badge variant="gold">{programme.code}</Badge>
+                <Badge variant="outline">{programme.code}</Badge>
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                   {programme.duration}
@@ -97,10 +97,9 @@ export default function AdmissionsPage() {
   return (
     <>
       {/* ---------------------------------------------------------- hero -- */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-primary-950 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+      <section className="page-banner">
 
-        <div className="container relative py-20 md:py-28">
+        <div className="container relative py-12 md:py-16">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-primary-100">
               <li>
@@ -118,7 +117,7 @@ export default function AdmissionsPage() {
           </nav>
 
           <Reveal className="mt-8 max-w-3xl" direction="up">
-            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">
+            <span className="eyebrow text-gold-200 dark:text-gold-200">
               Applications open
             </span>
             <h1 className="heading-xl mt-6 text-white">Admissions 2026–27</h1>
@@ -360,11 +359,10 @@ export default function AdmissionsPage() {
       {/* -------------------------------------------------- closing CTA -- */}
       <section className="section pt-0">
         <div className="container">
-          <Reveal className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 via-primary-800 to-maroon-900 px-6 py-14 text-center text-white sm:px-12 md:py-20">
-            <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
+          <Reveal className="relative overflow-hidden rounded-3xl bg-primary-900 px-6 py-14 text-center text-white sm:px-12 md:py-20">
 
             <div className="relative mx-auto max-w-2xl">
-              <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">
+              <span className="eyebrow text-gold-200 dark:text-gold-200">
                 Admissions office
               </span>
               <h2 className="heading-lg mt-6 text-white">Talk to us before you decide</h2>

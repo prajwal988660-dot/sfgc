@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 // The storage key and the pre-paint script live in a module with no
 // 'use client', because the root layout is a Server Component and cannot read a
 // plain value out of a client module.
-import { THEME_STORAGE_KEY, type ThemePreference } from '@/lib/theme'
+import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemePreference } from '@/lib/theme'
 
 function apply(preference: ThemePreference) {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -21,8 +21,15 @@ const OPTIONS: Array<{ value: ThemePreference; label: string; Icon: typeof Sun }
   { value: 'dark', label: 'Dark', Icon: Moon },
 ]
 
-export function ThemeToggle({ className }: { className?: string }) {
-  const [preference, setPreference] = React.useState<ThemePreference>('system')
+export function ThemeToggle({
+  className,
+  tone = 'default',
+}: {
+  className?: string
+  /** `inverse` for placement on the navy utility bar. */
+  tone?: 'default' | 'inverse'
+}) {
+  const [preference, setPreference] = React.useState<ThemePreference>(DEFAULT_THEME)
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -55,7 +62,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       role="radiogroup"
       aria-label="Colour theme"
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-full border border-border/60 bg-background/60 p-0.5',
+        'inline-flex items-center gap-0.5 rounded-md border p-0.5',
+        tone === 'inverse' ? 'border-white/15 bg-white/5' : 'border-border/60 bg-background/60',
         className,
       )}
     >
@@ -73,11 +81,15 @@ export function ThemeToggle({ className }: { className?: string }) {
             title={`${label} theme`}
             onClick={() => choose(value)}
             className={cn(
-              'inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors',
+              'inline-flex h-6 w-6 items-center justify-center rounded-sm transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              active
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+              tone === 'inverse'
+                ? active
+                  ? 'bg-white text-primary-950'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                : active
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
             )}
           >
             <Icon className="h-3.5 w-3.5" aria-hidden="true" />

@@ -11,7 +11,13 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+
+import type { GalleryImage } from '@sfgc/shared'
+import { api, safeFetch } from '@/lib/api'
 import { Reveal, RevealGroup, RevealItem } from '@/components/motion/reveal'
+import { Button } from '@/components/ui/button'
 import { COLLEGE, FACILITIES } from '@/content/college'
 import { cn } from '@/lib/utils'
 
@@ -76,7 +82,15 @@ const TILES: Record<FacilityName, { span: string; gradient: string }> = {
   },
 }
 
-export function GallerySection() {
+export async function GallerySection() {
+  // The latest published photographs. Until staff upload some in the admin
+  // panel this is empty and the strip is simply not rendered.
+  const { items: photos } = await safeFetch(
+    () => api.gallery.list({ limit: 8 }),
+    { items: [] as GalleryImage[], meta: { page: 1, limit: 0, total: 0, totalPages: 1 } },
+    'gallery.list (home)',
+  )
+
   return (
     // No tint of its own: the placements band directly above already sits on
     // `bg-secondary`, and a second near-identical wash flattened the rhythm.
@@ -85,7 +99,7 @@ export function GallerySection() {
         <Reveal className="max-w-3xl">
           <span className="eyebrow">Campus</span>
           <h2 id="gallery-heading" className="heading-lg mt-5">
-            Built for a full college day
+            Campus &amp; Facilities
           </h2>
           <p className="lede mt-5">
             {FACILITIES.length} facilities across the {COLLEGE.short} campus — rooms wired for
@@ -109,14 +123,12 @@ export function GallerySection() {
                   className={cn(
                     'group relative flex h-full flex-col justify-end overflow-hidden rounded-2xl',
                     'bg-gradient-to-br p-5 text-white shadow-card ring-1 ring-inset ring-white/10',
-                    'transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lift',
                     'sm:p-6',
                     tile.gradient,
                   )}
                 >
                   <Icon
                     className="pointer-events-none absolute -right-6 -top-5 h-32 w-32 text-white/[0.12]
-                               transition-transform duration-500 ease-out group-hover:scale-105
                                sm:-right-7 sm:-top-6 sm:h-40 sm:w-40"
                     strokeWidth={1.25}
                     aria-hidden="true"
@@ -140,6 +152,39 @@ export function GallerySection() {
             )
           })}
         </RevealGroup>
+
+        {photos.length > 0 ? (
+          <div className="mt-16">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <h3 className="font-display text-2xl font-bold">From the photo gallery</h3>
+              <Button asChild variant="outline">
+                <Link href="/gallery">
+                  View gallery
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+            <ul className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              {photos.map((photo) => (
+                <li key={photo.id}>
+                  <figure className="overflow-hidden rounded-lg border border-border bg-card">
+                    {/* Plain img: uploads can live on any host (see /gallery). */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.altText ?? ''}
+                      className="aspect-[4/3] w-full bg-muted object-cover"
+                      loading="lazy"
+                    />
+                    <figcaption className="truncate px-3 py-2 text-xs text-muted-foreground">
+                      {photo.title}
+                    </figcaption>
+                  </figure>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </section>
   )

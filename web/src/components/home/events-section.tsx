@@ -26,10 +26,10 @@ export async function EventsSection() {
           <div className="max-w-2xl space-y-4">
             <span className="eyebrow">
               <CalendarDays className="size-3.5" aria-hidden="true" />
-              On campus
+              Events
             </span>
             <h2 id="events-heading" className="heading-lg">
-              Fests, seminars and workshops — open for registration
+              Upcoming Events
             </h2>
             <p className="lede">
               Every event below is live from the college calendar. Dates, venues and seat
