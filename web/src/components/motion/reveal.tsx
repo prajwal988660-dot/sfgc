@@ -1,50 +1,86 @@
+'use client'
+
 import * as React from 'react'
+import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none'
 
-export interface RevealProps extends React.HTMLAttributes<HTMLElement> {
-  /** Accepted for compatibility; content no longer animates in. */
+const OFFSET: Record<Direction, { x: number; y: number }> = {
+  up: { x: 0, y: 28 },
+  down: { x: 0, y: -28 },
+  left: { x: 28, y: 0 },
+  right: { x: -28, y: 0 },
+  none: { x: 0, y: 0 },
+}
+
+export interface RevealProps extends React.HTMLAttributes<HTMLDivElement> {
   direction?: Direction
   delay?: number
+  /** Fraction of the element that must be visible before it animates. */
   amount?: number
   as?: 'div' | 'section' | 'li' | 'article' | 'header'
 }
 
 /**
- * Formerly a scroll-triggered entrance. Content now renders visible on first
- * paint: an official site should never show an empty band while it waits for
- * an animation, and it keeps print, screenshots and slow devices reliable.
- * The animation props are still accepted so existing call sites need no edits.
+ * Scroll-triggered entrance. Animates once, and collapses to a plain fade
+ * (no movement) when the visitor has asked for reduced motion.
  */
 export function Reveal({
   children,
   className,
-  direction: _direction,
-  delay: _delay,
-  amount: _amount,
-  as: Tag = 'div',
+  direction = 'up',
+  delay = 0,
+  amount = 0.25,
+  as = 'div',
   ...props
 }: RevealProps) {
+  const reduceMotion = useReducedMotion()
+  const offset = reduceMotion ? OFFSET.none : OFFSET[direction]
+  const MotionTag = motion[as]
+
   return (
-    <Tag className={cn(className)} {...props}>
+    <MotionTag
+      className={cn(className)}
+      initial={{ opacity: 0, ...offset }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, amount }}
+      transition={{
+        duration: reduceMotion ? 0.2 : 0.6,
+        delay,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      {...(props as Record<string, unknown>)}
+    >
       {children}
-    </Tag>
+    </MotionTag>
   )
 }
 
-/** Formerly staggered its children in; now a plain container. */
+/** Parent that staggers its `RevealItem` children. */
 export function RevealGroup({
   children,
   className,
-  stagger: _stagger,
-  amount: _amount,
+  stagger = 0.08,
+  amount = 0.15,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { stagger?: number; amount?: number }) {
+  const variants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: stagger } },
+  }
+
   return (
-    <div className={cn(className)} {...props}>
+    <motion.div
+      className={cn(className)}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount }}
+      variants={variants}
+      {...(props as Record<string, unknown>)}
+    >
       {children}
-    </div>
+    </motion.div>
   )
 }
 
@@ -53,9 +89,19 @@ export function RevealItem({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
+  const reduceMotion = useReducedMotion()
+  const variants: Variants = {
+    hidden: { opacity: 0, y: reduceMotion ? 0 : 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: reduceMotion ? 0.2 : 0.55, ease: [0.22, 1, 0.36, 1] },
+    },
+  }
+
   return (
-    <div className={cn(className)} {...props}>
+    <motion.div className={cn(className)} variants={variants} {...(props as Record<string, unknown>)}>
       {children}
-    </div>
+    </motion.div>
   )
 }

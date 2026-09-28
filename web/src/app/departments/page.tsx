@@ -122,7 +122,7 @@ const PAGE_SECTIONS: ReadonlyArray<{ href: string; label: string }> = [
 
 const CARD_LIFT = cn(
   'transition-all duration-300 ease-out',
-  ' hover:border-primary/50 hover:shadow-card',
+  'hover:-translate-y-1 hover:border-gold/60 hover:shadow-lift',
 )
 
 /** One programme card. Richer than the homepage tabs: icon, code, duration and
@@ -145,7 +145,7 @@ function CourseCard({ course }: { course: Course }) {
       </CardHeader>
 
       <CardFooter className="mt-auto flex-wrap items-center gap-x-4 gap-y-2 pt-2">
-        <Badge variant="outline">{course.code}</Badge>
+        <Badge variant="gold">{course.code}</Badge>
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
           {course.duration}
@@ -161,9 +161,10 @@ export default function DepartmentsPage() {
   return (
     <>
       {/* ---------------------------------------------------------- hero -- */}
-      <section className="page-banner">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white">
+        <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
 
-        <div className="container relative py-12 md:py-16">
+        <div className="container relative py-20 md:py-28">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm text-primary-100">
               <li>
@@ -181,7 +182,7 @@ export default function DepartmentsPage() {
           </nav>
 
           <Reveal className="mt-8 max-w-3xl">
-            <span className="eyebrow text-gold-200 dark:text-gold-200">Academics</span>
+            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">Academics</span>
             <h1 className="heading-xl mt-6 text-white">Departments &amp; Programmes</h1>
             <p className="lede mt-6 max-w-2xl text-primary-100">
               {programmeCount} programmes taught by {DEPARTMENTS.length} departments on one
@@ -384,12 +385,13 @@ export default function DepartmentsPage() {
       {/* ----------------------------------------------------------- cta -- */}
       <section
         aria-labelledby="departments-cta-heading"
-        className="relative overflow-hidden bg-primary-900 text-white"
+        className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-maroon-900 text-white"
       >
+        <div className="pointer-events-none absolute inset-0 bg-hero-radial" aria-hidden="true" />
 
         <div className="container relative py-16 md:py-20">
           <Reveal className="mx-auto max-w-2xl text-center">
-            <span className="eyebrow text-gold-200 dark:text-gold-200">Admissions</span>
+            <span className="eyebrow border-gold/40 bg-gold/15 text-gold-200">Admissions</span>
             <h2 id="departments-cta-heading" className="heading-lg mt-6 text-white">
               Still deciding which programme fits?
             </h2>

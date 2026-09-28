@@ -67,10 +67,16 @@ export function SiteFooter() {
               href="/"
               className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
             >
-              <Image src={COLLEGE.emblem} alt="" width={56} height={56} className="h-14 w-14" />
+              <Image
+                src="/logo.webp"
+                alt={COLLEGE.name}
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-xl object-cover ring-1 ring-white/20"
+              />
               <span className="flex flex-col gap-1">
-                <span className="font-display text-base font-bold leading-tight">
-                  {COLLEGE.name}
+                <span className="font-display text-base font-bold leading-none">
+                  {COLLEGE.short}
                 </span>
                 <span className="text-[0.68rem] leading-none text-white/60">
                   {COLLEGE.location} · Est. {COLLEGE.established}
@@ -84,7 +90,7 @@ export function SiteFooter() {
               {BADGES.map((badge) => (
                 <li
                   key={badge.label}
-                  className="rounded border border-white/15 bg-white/5 px-3 py-1.5"
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5"
                 >
                   <span className="block text-[0.7rem] font-bold leading-tight text-gold-200">
                     {badge.label}
@@ -130,7 +136,7 @@ export function SiteFooter() {
                       rel="noopener noreferrer"
                       className={`${linkClass} inline-flex items-center gap-1.5`}
                     >
-                      Official SFGC website
+                      Official site
                       <ExternalLink className="h-3 w-3" aria-hidden="true" />
                     </a>
                   </li>
@@ -194,7 +200,7 @@ export function SiteFooter() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`${COLLEGE.short} on ${social.label}`}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/15 bg-white/5 text-white/75 transition-colors hover:border-gold/50 hover:bg-gold/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition-colors hover:border-gold/50 hover:bg-gold/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </a>

@@ -70,8 +70,8 @@ type Course = (typeof COURSES.ug)[number] | (typeof COURSES.pg)[number]
 /** Shared hover/focus treatment, so keyboard users see exactly what a mouse shows. */
 const CARD_STATE = cn(
   'transition-all duration-300 ease-out',
-  ' group-hover:border-primary/50 group-hover:shadow-card',
-  ' group-focus-visible:border-primary/50 group-focus-visible:shadow-card',
+  'group-hover:-translate-y-1.5 group-hover:border-gold/60 group-hover:shadow-lift',
+  'group-focus-visible:-translate-y-1.5 group-focus-visible:border-gold/60 group-focus-visible:shadow-lift',
 )
 
 function CourseList({ courses }: { courses: readonly Course[] }) {
@@ -84,7 +84,7 @@ function CourseList({ courses }: { courses: readonly Course[] }) {
           <li
             key={course.code}
             className="flex min-w-0 gap-4 rounded-xl border border-border/70 bg-background p-4
-                       transition-all duration-300 hover:border-primary/50
+                       transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/50
                        hover:shadow-card"
           >
             <span
@@ -97,7 +97,7 @@ function CourseList({ courses }: { courses: readonly Course[] }) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
                 <h4 className="font-display text-base font-semibold leading-snug">{course.name}</h4>
-                <Badge variant="outline" className="text-[11px]">
+                <Badge variant="gold" className="text-[11px]">
                   {course.code}
                 </Badge>
               </div>
@@ -117,13 +117,15 @@ function CourseList({ courses }: { courses: readonly Course[] }) {
 }
 
 export function DepartmentsSection() {
+  const programmeCount = COURSES.ug.length + COURSES.pg.length
+
   return (
     <section id="ug" aria-labelledby="departments-heading" className="section">
       <div className="container">
         <Reveal className="max-w-3xl">
           <span className="eyebrow">Academics</span>
           <h2 id="departments-heading" className="heading-lg mt-5">
-            Departments &amp; Programmes
+            {DEPARTMENTS.length} departments. {programmeCount} programmes. One campus.
           </h2>
           <p className="lede mt-5">
             Commerce, management, computing, life and physical sciences, languages and physical
@@ -152,9 +154,10 @@ export function DepartmentsSection() {
                       <span
                         className="mb-2 inline-flex h-12 w-12 items-center justify-center rounded-xl
                                    bg-primary/10 text-primary transition-colors duration-300
-                                   group-hover:bg-primary group-hover:text-primary-foreground
-                                   group-focus-visible:bg-primary group-focus-visible:text-primary-foreground
-                                   dark:text-primary-200"
+                                   group-hover:bg-gold/20 group-hover:text-gold-700
+                                   group-focus-visible:bg-gold/20 group-focus-visible:text-gold-700
+                                   dark:text-primary-200 dark:group-hover:text-gold-300
+                                   dark:group-focus-visible:text-gold-300"
                       >
                         <Icon className="h-6 w-6" aria-hidden="true" />
                       </span>
@@ -163,8 +166,9 @@ export function DepartmentsSection() {
                         {department.name}
                         <ChevronRight
                           className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-all
-                                     duration-300 group-hover:translate-x-1 group-hover:text-primary
-                                     group-focus-visible:translate-x-1 group-focus-visible:text-primary"
+                                     duration-300 group-hover:translate-x-1 group-hover:text-gold-600
+                                     group-focus-visible:translate-x-1 group-focus-visible:text-gold-600
+                                     dark:group-hover:text-gold-300 dark:group-focus-visible:text-gold-300"
                           aria-hidden="true"
                         />
                       </CardTitle>

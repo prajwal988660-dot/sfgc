@@ -32,7 +32,7 @@ export async function NoticesSection() {
               </span>
 
               <h2 id="notices-heading" className="heading-lg mt-5">
-                Notices &amp; Circulars
+                Announcements, straight from the college office
               </h2>
 
               <p className="lede mt-5">
@@ -43,7 +43,7 @@ export async function NoticesSection() {
 
               <div className="mt-6 flex items-start gap-3 rounded-xl border bg-card p-4 shadow-card">
                 <Smartphone
-                  className="mt-0.5 size-4 shrink-0 text-primary dark:text-primary-200"
+                  className="mt-0.5 size-4 shrink-0 text-gold-600 dark:text-gold-300"
                   aria-hidden="true"
                 />
                 <p className="text-sm leading-relaxed text-muted-foreground">

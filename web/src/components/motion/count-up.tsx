@@ -1,36 +1,66 @@
+'use client'
+
+import * as React from 'react'
+import { useInView, useReducedMotion } from 'framer-motion'
+
 export interface CountUpProps {
   value: number
-  /** Accepted for compatibility; the figure no longer counts up. */
+  /** Milliseconds for the full count. */
   duration?: number
   decimals?: number
   prefix?: string
   suffix?: string
-  /** Drop thousands separators — a year reads 1930, not 1,930. */
-  grouping?: boolean
   className?: string
 }
 
 /**
- * Renders a formatted figure. It used to count up from 0 on scroll, which left
- * a statistics band reading "0" until it animated; official figures should be
- * correct on first paint, so the final value is shown directly.
+ * Counts from 0 to `value` when scrolled into view. Uses requestAnimationFrame
+ * rather than a motion value so the formatted output (thousands separators,
+ * fixed decimals) stays exact, and renders the final number immediately for
+ * visitors who prefer reduced motion.
  */
 export function CountUp({
   value,
+  duration = 1800,
   decimals = 0,
   prefix = '',
   suffix = '',
-  grouping = true,
   className,
 }: CountUpProps) {
-  const formatted = value.toLocaleString('en-IN', {
+  const ref = React.useRef<HTMLSpanElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.5 })
+  const reduceMotion = useReducedMotion()
+  const [display, setDisplay] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!inView) return
+    if (reduceMotion) {
+      setDisplay(value)
+      return
+    }
+
+    let frame = 0
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration)
+      // easeOutExpo — fast start, gentle settle.
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+      setDisplay(value * eased)
+      if (progress < 1) frame = requestAnimationFrame(tick)
+    }
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [inView, value, duration, reduceMotion])
+
+  const formatted = display.toLocaleString('en-IN', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-    useGrouping: grouping,
   })
 
   return (
-    <span className={className}>
+    <span ref={ref} className={className}>
       {prefix}
       {formatted}
       {suffix}

@@ -27,11 +27,14 @@ export function SiteChrome({
 }) {
   const pathname = usePathname()
   const bare = pathname?.startsWith('/admin') ?? false
+  // The homepage header overlays its hero, which would hide the strip; the
+  // homepage carries its own notices section instead.
+  const isHome = pathname === '/'
 
   return (
     <>
       {bare ? null : header}
-      {bare ? null : noticeBar}
+      {bare || isHome ? null : noticeBar}
       <main id="main">{children}</main>
       {bare ? null : footer}
     </>

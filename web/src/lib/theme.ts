@@ -11,25 +11,19 @@
 
 export type ThemePreference = 'light' | 'dark' | 'system'
 
-export const DEFAULT_THEME: ThemePreference = 'light'
-
 export const THEME_STORAGE_KEY = 'sfgc.theme'
 
 /**
  * Runs before first paint, injected into <head>. Without it the page renders in
  * light mode and then snaps to dark, which is worse than no dark mode at all.
  * Kept as a string because it must execute synchronously, ahead of React.
- *
- * Light is the default: an official college site should open light for every
- * first-time visitor. Dark applies only when the visitor picked it, or picked
- * "system" on a device set to dark.
  */
 export const themeInitScript = `
 (function () {
   try {
     var stored = localStorage.getItem('${THEME_STORAGE_KEY}');
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var dark = stored === 'dark' || (stored === 'system' && prefersDark);
+    var dark = stored === 'dark' || ((!stored || stored === 'system') && prefersDark);
     document.documentElement.classList.toggle('dark', dark);
   } catch (e) {}
 })();

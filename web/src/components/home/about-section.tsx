@@ -1,14 +1,16 @@
-import Image from 'next/image'
+import type { CSSProperties } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Compass, Eye, Quote } from 'lucide-react'
+import { ArrowRight, Compass, Eye, Landmark, Quote } from 'lucide-react'
 
 import { Reveal } from '@/components/motion/reveal'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { COLLEGE, MISSION, PRINCIPAL, VISION, WELCOME } from '@/content/college'
+import { cn } from '@/lib/utils'
 
 /**
- * The principal's card carries a taste of the principal's message; the whole text
+ * The floating card carries a taste of the principal's message; the whole text
  * stays on /about. Truncating by sentence — rather than pasting a shortened
  * copy here — means an edit in college.ts flows through on its own.
  *
@@ -31,11 +33,19 @@ const PILLARS = [
   { title: 'Mission', body: MISSION, icon: Compass },
 ] as const
 
+/** A faint measured grid over the gradient panel, so it reads as a designed
+ *  surface instead of a flat colour fill. */
+const PANEL_GRID: CSSProperties = {
+  backgroundImage:
+    'linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px)',
+  backgroundSize: '56px 56px',
+}
+
 export function AboutSection() {
   return (
     <section id="about" className="section">
       <div className="container">
-        <div className="grid items-start gap-14 lg:grid-cols-2 lg:gap-16">
+        <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
           {/* ------------------------------------------------------ copy -- */}
           <Reveal>
             <p className="eyebrow">About the College</p>
@@ -59,44 +69,79 @@ export function AboutSection() {
           </Reveal>
 
           {/* --------------------------------------------------- visual -- */}
-          <Reveal>
-            <figure>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-border shadow-card">
-                <Image
-                  src="/campus-building.webp"
-                  alt={`The ${COLLEGE.name} building, ${COLLEGE.location}`}
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  className="object-cover object-[center_65%]"
-                />
-              </div>
-              <figcaption className="mt-2 flex justify-between gap-4 text-xs text-muted-foreground">
-                <span>The college building, New Town, Yelahanka</span>
-                <span>Photo: Sham Robinson</span>
-              </figcaption>
-            </figure>
+          <Reveal direction="left" delay={0.12}>
+            {/* The bottom margin reserves room for the card that hangs below
+                the panel, so it never collides with the cards underneath. */}
+            <div className="relative mb-20">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gradient-to-br from-primary-700 via-primary-900 to-maroon-900 shadow-lift sm:aspect-[16/11] lg:aspect-[4/5]">
+                <div aria-hidden="true" className="absolute inset-0 bg-hero-radial" />
+                <div aria-hidden="true" className="absolute inset-0 opacity-[0.18]" style={PANEL_GRID} />
 
-            <div className="mt-6 rounded-lg border border-border bg-card p-5 sm:p-6">
-              <div className="flex items-center gap-3">
-                <span
+                {/* Concentric rules — a quiet nod to a seal or crest. */}
+                <div
                   aria-hidden="true"
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary dark:text-primary-200"
-                >
-                  <Quote className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="font-display text-base font-semibold leading-tight text-foreground">
-                    {PRINCIPAL.name}
+                  className="absolute -right-20 -top-20 h-64 w-64 rounded-full border border-gold/25"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute -right-28 -top-12 h-80 w-80 rounded-full border border-white/10"
+                />
+
+                <Landmark
+                  aria-hidden="true"
+                  strokeWidth={0.9}
+                  className="pointer-events-none absolute -bottom-6 -right-6 h-52 w-52 text-white/[0.08] sm:h-64 sm:w-64"
+                />
+
+                <div className="relative flex h-full flex-col p-7 sm:p-9">
+                  <span className="font-display text-5xl font-bold leading-none text-white/90 sm:text-6xl">
+                    {COLLEGE.short}
+                  </span>
+
+                  <span aria-hidden="true" className="mt-5 block h-px w-14 bg-gold" />
+
+                  <p className="mt-5 max-w-[16rem] font-display text-xl leading-snug text-white sm:text-2xl">
+                    {COLLEGE.tagline}
                   </p>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    {PRINCIPAL.title}
-                  </p>
+
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    <Badge variant="glass">{COLLEGE.accreditation}</Badge>
+                    <Badge variant="glass">{COLLEGE.iso}</Badge>
+                  </div>
                 </div>
               </div>
 
-              <blockquote className="mt-4 border-l-2 border-maroon-600 pl-4 text-sm leading-relaxed text-foreground/80">
-                {PRINCIPAL_PULL_QUOTE}
-              </blockquote>
+              {/* Floating card, overlapping the panel's lower corner. Kept at
+                  85% opacity rather than the default 70% so the quote still
+                  clears AA where it sits over the dark gradient. */}
+              <div
+                className={cn(
+                  'glass absolute -bottom-12 left-4 right-4 rounded-2xl bg-white/85 p-5 shadow-glass',
+                  'ring-1 ring-primary/10 sm:left-8 sm:right-8 sm:p-6 lg:-left-8 lg:right-6',
+                  'dark:bg-primary-950/85 dark:ring-white/10',
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-maroon/10 text-maroon dark:bg-white/10 dark:text-gold-300"
+                  >
+                    <Quote className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="font-display text-base font-semibold leading-tight text-foreground">
+                      {PRINCIPAL.name}
+                    </p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-700 dark:text-gold-300">
+                      {PRINCIPAL.title}
+                    </p>
+                  </div>
+                </div>
+
+                <blockquote className="mt-4 border-l-2 border-gold pl-4 text-sm leading-relaxed text-foreground/80">
+                  {PRINCIPAL_PULL_QUOTE}
+                </blockquote>
+              </div>
             </div>
           </Reveal>
         </div>
@@ -107,11 +152,11 @@ export function AboutSection() {
             const Icon = pillar.icon
             return (
               <Reveal key={pillar.title} delay={0.08 * index}>
-                <Card className="h-full">
+                <Card className="h-full border-t-4 border-t-gold hover:shadow-lift">
                   <CardHeader className="space-y-0">
                     <span
                       aria-hidden="true"
-                      className="mb-4 grid h-11 w-11 place-items-center rounded-md bg-primary/10 text-primary dark:text-primary-200"
+                      className="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-gold/15 text-gold-700 dark:text-gold-300"
                     >
                       <Icon className="h-5 w-5" />
                     </span>

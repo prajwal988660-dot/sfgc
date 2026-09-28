@@ -150,8 +150,17 @@ export default async function EventDetailPage({ params }: EventPageProps) {
         }}
       />
 
-      <header className="page-banner">
-        <div className="container relative py-12 md:py-16">
+      <header className="relative overflow-hidden bg-primary-950 pb-16 pt-28 text-white md:pb-20 md:pt-36">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,rgba(42,99,184,.45),transparent_60%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_50%_55%_at_100%_100%,rgba(138,31,64,.42),transparent_60%)]"
+        />
+
+        <div className="container relative">
           <nav aria-label="Breadcrumb">
             <ol className="flex flex-wrap items-center gap-2 text-sm text-white/70">
               <li>

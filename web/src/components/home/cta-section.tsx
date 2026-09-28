@@ -1,23 +1,48 @@
 import Link from 'next/link'
 import { ArrowRight, MessagesSquare, Phone } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Reveal } from '@/components/motion/reveal'
 import { COLLEGE, COURSES } from '@/content/college'
 
 /**
- * Closing band that sits directly above the footer. Server component.
+ * Closing band that sits directly above the footer. Server component — the
+ * only client code here is the Reveal primitive, which carries its own
+ * 'use client' boundary.
  */
 export function CtaSection() {
   return (
     <section
       aria-labelledby="cta-heading"
-      className="border-t-4 border-maroon-700 bg-primary-900 text-white"
+      className="relative isolate overflow-hidden bg-gradient-to-br from-maroon-900 via-maroon-800 to-primary-950 text-white"
     >
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-hero-radial" />
+        <div className="absolute -left-24 -top-28 h-[22rem] w-[22rem] rounded-full bg-maroon-500/25 blur-[120px]" />
+        <div className="absolute -bottom-32 -right-16 h-[24rem] w-[24rem] rounded-full bg-primary-600/30 blur-[130px]" />
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.14) 1px, transparent 0)',
+            backgroundSize: '30px 30px',
+          }}
+        />
+      </div>
+
+      {/* Gold hairline separating the band from the section above it. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/45 to-transparent"
+      />
+
       <div className="container section">
         <div className="mx-auto max-w-3xl text-center">
           <Reveal direction="up">
-            <p className="eyebrow text-gold-200 dark:text-gold-200">{COLLEGE.tagline}</p>
+            <Badge variant="glass" className="px-3 py-1 uppercase tracking-[0.12em]">
+              {COLLEGE.tagline}
+            </Badge>
           </Reveal>
 
           <Reveal direction="up" delay={0.08}>
@@ -25,7 +50,7 @@ export function CtaSection() {
               id="cta-heading"
               className="heading-lg mt-5 text-balance text-[1.75rem] leading-tight sm:text-4xl lg:text-[2.75rem]"
             >
-              Admissions Open for 2026–27
+              Admissions for 2026–27 are open
             </h2>
           </Reveal>
 
@@ -59,7 +84,7 @@ export function CtaSection() {
               Prefer to call?{' '}
               <a
                 href={COLLEGE.phoneHref}
-                className="link-underline inline-flex items-center gap-1.5 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-primary-900"
+                className="link-underline inline-flex items-center gap-1.5 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-maroon-900"
               >
                 <Phone className="size-4" aria-hidden="true" />
                 {COLLEGE.phone}
