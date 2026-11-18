@@ -1,4 +1,81 @@
-# SFGC Platform
+# SFGC Platform — Full-Stack College Management System
+
+> One backend, three front-ends. A complete, production-grade platform for a college:
+> a secure REST API, a public website, and dedicated teacher and student mobile apps —
+> all sharing a single typed SDK in an npm-workspaces monorepo.
+
+<p>
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-5FA04E?logo=nodedotjs&logoColor=white">
+  <img alt="Express" src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white">
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js%2014-000000?logo=nextdotjs&logoColor=white">
+  <img alt="React Native" src="https://img.shields.io/badge/React%20Native-61DAFB?logo=react&logoColor=black">
+  <img alt="Expo" src="https://img.shields.io/badge/Expo-000020?logo=expo&logoColor=white">
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white">
+</p>
+
+---
+
+## ✨ Highlights
+
+- **Full-stack monorepo** — a single Express + Prisma + PostgreSQL API powering a Next.js 14 website and two React Native (Expo) mobile apps, with a shared TypeScript SDK that keeps types honest across every client.
+- **Security-first auth** — JWT authentication, bcrypt password hashing, rate limiting, and Helmet security headers. Authorization is **permission-based, not role-string-based**, with row-level ownership checks (a teacher can only touch their own subjects) backed by 52 unit tests.
+- **Five roles, real access control** — Student, Teacher, Content Admin, Admissions Officer, Super Admin — each with a precise, tested permission matrix.
+- **Push notifications** — Expo push fan-out so students are notified the moment a notice is posted.
+- **Frozen API contract** — the interface between all four apps is documented and version-controlled in [`API_CONTRACT.md`](./API_CONTRACT.md).
+- **Production tooling** — typed env validation that refuses to boot if misconfigured, idempotent database seeding, migration-based schema management, and native APK build scripts.
+
+## 🏗️ Architecture
+
+```
+                        ┌──────────────────────────────┐
+                        │   REST API  (backend/)        │
+                        │   Node · Express · Prisma     │
+                        │   PostgreSQL · JWT · Zod       │
+                        └──────────────┬───────────────┘
+                                       │  one frozen API contract
+          ┌────────────────────────────┼────────────────────────────┐
+          │                            │                            │
+   ┌──────┴───────┐            ┌────────┴────────┐          ┌────────┴────────┐
+   │  Website     │            │  Teacher App    │          │  Student App    │
+   │  Next.js 14  │            │  React Native   │          │  React Native   │
+   │  Tailwind    │            │  Expo           │          │  Expo + Push    │
+   └──────────────┘            └─────────────────┘          └─────────────────┘
+                     all share  ►  packages/shared  (TypeScript types + API client)
+```
+
+## 🧰 Tech Stack
+
+| Layer | Technologies |
+| --- | --- |
+| **Backend** | Node.js, Express, Prisma ORM, PostgreSQL, JWT, bcrypt, Zod, Helmet, rate-limiting |
+| **Website** | Next.js 14 (App Router), React 18, Tailwind CSS, Framer Motion |
+| **Mobile** | React Native, Expo (SDK 57), React Navigation, Expo Notifications |
+| **Shared** | TypeScript, isomorphic API client, shared types |
+| **Tooling** | npm workspaces (monorepo), Vitest, ESLint, Prettier, EAS Build |
+
+## 🚀 Quick Start
+
+```bash
+npm install          # installs every workspace at once
+npm run dev:backend  # http://localhost:4000/api
+npm run dev:web      # http://localhost:3000
+npm run dev:teacher  # Expo — scan the QR with Expo Go
+npm run dev:student  # Expo — scan the QR with Expo Go
+```
+
+Full setup (database, seeding, mobile config, APK builds, deployment) is documented in detail below.
+
+> **Note:** This is a platform built as a real-world project for Seshadripuram First Grade College.
+> It is an independent engineering project and is not an official property of the college.
+
+---
+
+<details>
+<summary><strong>📖 Full setup &amp; engineering documentation</strong> (click to expand)</summary>
+
 
 A complete college platform for **Seshadripuram First Grade College** — one backend, three
 front ends.
@@ -21,7 +98,7 @@ that before changing a response shape.
 ## 1 · Prerequisites
 
 - **Node.js 18.18+** (this repo was built on Node 24)
-- A **Supabase** project — you already have one: `omqvpahtcuwxpvdnxjlq`
+- A **Supabase** project — you already have one: `<your-supabase-project-ref>`
 - For APKs: a free [Expo](https://expo.dev) account and `npm i -g eas-cli`
 
 ---
@@ -45,8 +122,8 @@ copy your database password into `backend/.env` (already created, with a generat
 `JWT_SECRET`):
 
 ```env
-DATABASE_URL="postgresql://postgres.omqvpahtcuwxpvdnxjlq:YOUR-PASSWORD@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
-DIRECT_URL="postgresql://postgres.omqvpahtcuwxpvdnxjlq:YOUR-PASSWORD@aws-0-<region>.pooler.supabase.com:5432/postgres"
+DATABASE_URL="postgresql://postgres.<your-supabase-project-ref>:YOUR-PASSWORD@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://postgres.<your-supabase-project-ref>:YOUR-PASSWORD@aws-0-<region>.pooler.supabase.com:5432/postgres"
 ```
 
 > Two URLs on purpose: `DATABASE_URL` is the **pooled** connection (port 6543) used at
@@ -319,3 +396,5 @@ sfgc/
   not be world-readable.
 - This is a recreation built for the college; it is not affiliated with, nor an official
   property of, Seshadripuram First Grade College.
+
+</details>
